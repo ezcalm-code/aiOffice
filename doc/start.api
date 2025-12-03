@@ -1,0 +1,10 @@
+syntax = "v1"
+
+import "user.api"
+import "common.api"
+
+info(
+    tittle: "aiOffice"
+    author: "wsj"
+    serviceMode: "1"
+)

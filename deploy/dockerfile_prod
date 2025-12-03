@@ -1,0 +1,14 @@
+FROM alpine
+RUN apk update &&\
+    apk --no-cache add tzdata && \
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" >  /etc/timezone
+ENV TZ=Asia/Shanghai
+RUN apk add --update ca-certificates && \
+    rm -rf /var/cache/apk/* /tmp/* && \
+    update-ca-certificates
+
+ADD ..\aioffice\doc\start-prod /..\aioffice\doc\start-prod
+ADD etc/prod /etc
+
+ENTRYPOINT [ "/..\aioffice\doc\start-prod", "-f", "/etc/..\aioffice\doc\start.yaml" ]
