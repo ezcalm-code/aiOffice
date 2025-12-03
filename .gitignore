@@ -55,6 +55,7 @@ logs/
 /Users/*/Library/Caches/JetBrains/
 
 # Application specific
-AIWorkHelper
+aiOffice
 ___go_build_*
 upload/
+/volumes/
