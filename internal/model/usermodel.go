@@ -14,6 +14,7 @@ type UserModel interface {
 	Insert(ctx context.Context, data *User) error
 	FindOne(ctx context.Context, id string) (*User, error)
 	FindByName(ctx context.Context, name string) (*User, error)
+	FindAdminUser(ctx context.Context) (*User, error)
 	Update(ctx context.Context, data *User) error
 	Delete(ctx context.Context, id string) error
 }
@@ -76,6 +77,19 @@ func (m *defaultUserModel) Delete(ctx context.Context, id string) error {
 func (m *defaultUserModel) FindByName(ctx context.Context, name string) (*User, error) {
 	var user User
 	err := m.col.FindOne(ctx, bson.M{"name": name}).Decode(&user)
+	switch err {
+	case nil:
+		return &user, nil
+	case mongo.ErrNoDocuments:
+		return nil, ErrNotUser
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultUserModel) FindAdminUser(ctx context.Context) (*User, error) {
+	var user User
+	err := m.col.FindOne(ctx, bson.M{"IsAdmin": true}).Decode(&user)
 	switch err {
 	case nil:
 		return &user, nil
