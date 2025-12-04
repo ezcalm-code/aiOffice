@@ -8,7 +8,7 @@ func GenPasswordHash(password []byte) ([]byte, error) {
 }
 
 //hash校验
-func ValidatePasswordHash(password []byte, hashd string) bool {
+func ValidatePasswordHash(password string, hashd string) bool {
 	if err := bcrypt.CompareHashAndPassword([]byte(hashd), []byte(password)); err != nil {
 		return false
 	}

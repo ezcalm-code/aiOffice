@@ -2,9 +2,13 @@ package logic
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"aiOffice/internal/domain"
 	"aiOffice/internal/svc"
+	"aiOffice/pkg/encrypt"
+	"aiOffice/pkg/token"
 )
 
 type User interface {
@@ -36,7 +40,26 @@ func NewUser(svcCtx *svc.ServiceContext) User {
 
 // 验证用户名密码
 func (l *user) Login(ctx context.Context, req *domain.LoginReq) (resp *domain.LoginResp, err error) {
-	return
+	// 查找用户
+	user, err := l.svcCtx.UserModel.FindByName(ctx, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	// 验证密码
+	if !encrypt.ValidatePasswordHash(req.Password, (user.Password)) {
+		return nil, errors.New("密码错误")
+	}
+	now := time.Now().Unix()
+	token, err := token.GetJwtToken(l.svcCtx.Config.Jwt.Secret, now, l.svcCtx.Config.Jwt.Expire, user.ID.Hex())
+	if err != nil {
+		return nil, err
+	}
+	return &domain.LoginResp{
+		Id:           user.ID.Hex(),
+		Name:         user.Name,
+		AccessToken:  token,
+		AccessExpire: l.svcCtx.Config.Jwt.Expire,
+	}, nil
 }
 
 // 根据ID获取用户

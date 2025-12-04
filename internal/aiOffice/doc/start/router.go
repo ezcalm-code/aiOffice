@@ -1,4 +1,4 @@
-package ..\aiOffice\doc\start
+package start
 
 import (
 	"aiOffice/internal/logic"
@@ -18,6 +18,5 @@ func initHandler(svc *svc.ServiceContext) []Handler {
 
 	return []Handler{
 		user,
-
 	}
 }
