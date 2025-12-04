@@ -14,7 +14,7 @@ func GetJwtToken(secretyKey string, iat, second int64, uid string) (string, erro
 	claims["iat"] = iat          //签发时间
 	claims[Identify] = uid       //用户标识
 
-	token := jwt.New(jwt.SigningMethodES256)
+	token := jwt.New(jwt.SigningMethodHS256)
 	token.Claims = claims
 	return token.SignedString([]byte(secretyKey))
 }

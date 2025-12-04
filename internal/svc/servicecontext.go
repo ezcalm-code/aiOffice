@@ -4,6 +4,7 @@ import (
 	"aiOffice/internal/config"
 	"aiOffice/internal/middleware"
 	"aiOffice/internal/model"
+	"aiOffice/pkg/encrypt"
 	"aiOffice/pkg/mongoutils"
 	"context"
 
@@ -53,9 +54,13 @@ func initAdminUser(svc *ServiceContext) error {
 	if admin != nil {
 		return nil
 	}
+	password, err := encrypt.GenPasswordHash([]byte("root@123"))
+	if err != nil {
+		return err
+	}
 	return svc.UserModel.Insert(ctx, &model.User{
 		Name:     "root",
-		Password: "root@123",
+		Password: string(password),
 		Status:   0,
 		IsAdmin:  true,
 	})
