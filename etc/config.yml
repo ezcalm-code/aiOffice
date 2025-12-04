@@ -1,0 +1,11 @@
+#程序配置
+Name: AIOffice
+Addr: 0.0.0.0:8000
+
+#Mongo配置
+Mongo:
+  User: ""
+  Password: ""
+  Host: ["127.0.0.1"]
+  Port: 27017
+  Database: "aioffice"

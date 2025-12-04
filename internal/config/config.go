@@ -13,4 +13,14 @@ type Config struct {
 		Password string
 		DB       int
 	}
+
+	Mongo struct {
+		User     string
+		Password string
+		Host     []string
+		Port     int
+		Database string
+		Param    string
+		//MaxPoolSize uint64
+	}
 }
