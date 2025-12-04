@@ -89,7 +89,7 @@ func (m *defaultUserModel) FindByName(ctx context.Context, name string) (*User, 
 
 func (m *defaultUserModel) FindAdminUser(ctx context.Context) (*User, error) {
 	var user User
-	err := m.col.FindOne(ctx, bson.M{"IsAdmin": true}).Decode(&user)
+	err := m.col.FindOne(ctx, bson.M{"isAdmin": true}).Decode(&user)
 	switch err {
 	case nil:
 		return &user, nil
