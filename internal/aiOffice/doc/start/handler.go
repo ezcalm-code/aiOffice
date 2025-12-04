@@ -3,7 +3,10 @@ package start
 import (
 	"gitee.com/dn-jinmin/tlog"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
+	_ "aiOffice/docs" // swagger 文档
 	"aiOffice/internal/handler"
 	"aiOffice/internal/middleware"
 	"aiOffice/internal/svc"
@@ -37,6 +40,9 @@ func NewHandle(svc *svc.ServiceContext) *handle {
 	h.srv.Use(middleware.NewLog().Handler)
 
 	httpx.SetErrorHandler(handler.ErrorHandler)
+
+	// Swagger 文档路由
+	h.srv.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	handlers := initHandler(svc)
 	for _, handler := range handlers {
