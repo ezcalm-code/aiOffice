@@ -2,6 +2,7 @@ package svc
 
 import (
 	"aiOffice/internal/config"
+	"aiOffice/internal/middleware"
 	"aiOffice/internal/model"
 	"aiOffice/pkg/mongoutils"
 	"context"
@@ -15,6 +16,7 @@ type ServiceContext struct {
 	// todo repo and pkg object instance
 	Mongo     *mongo.Database
 	UserModel model.UserModel
+	Jwt       *middleware.Jwt
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -34,6 +36,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		Config:    c,
 		Mongo:     mongoDB,
 		UserModel: model.NewUserModel(mongoDB),
+		Jwt:       middleware.NewJwt(c.Jwt.Secret),
 	}
 
 	return svc, initAdminUser(svc)

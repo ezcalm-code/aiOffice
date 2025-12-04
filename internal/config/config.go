@@ -23,4 +23,9 @@ type Config struct {
 		Param    string
 		//MaxPoolSize uint64
 	}
+
+	Jwt struct {
+		Secret string
+		Expire int64
+	}
 }

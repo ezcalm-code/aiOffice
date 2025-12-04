@@ -9,3 +9,7 @@ Mongo:
   Host: ["127.0.0.1"]
   Port: 27017
   Database: "aioffice"
+
+Jwt:
+  Secret: "jwtnb666"
+  Expire: 8640000 #100天
