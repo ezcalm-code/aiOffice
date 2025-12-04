@@ -9,6 +9,7 @@ import (
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/encrypt"
 	"aiOffice/pkg/token"
+	"aiOffice/pkg/xerr"
 )
 
 type User interface {
@@ -52,7 +53,7 @@ func (l *user) Login(ctx context.Context, req *domain.LoginReq) (resp *domain.Lo
 	now := time.Now().Unix()
 	token, err := token.GetJwtToken(l.svcCtx.Config.Jwt.Secret, now, l.svcCtx.Config.Jwt.Expire, user.ID.Hex())
 	if err != nil {
-		return nil, err
+		return nil, xerr.WithMessagef(err, "GetToken Fail with %s", req.Name)
 	}
 	return &domain.LoginResp{
 		Id:           user.ID.Hex(),
