@@ -12,6 +12,8 @@ require (
 )
 
 require (
+	gitee.com/dn-jinmin/gen-id v1.0.2 // indirect
+	gitee.com/dn-jinmin/tlog v1.1.14 // indirect
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect

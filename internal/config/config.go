@@ -1,5 +1,7 @@
 package config
 
+import "gitee.com/dn-jinmin/tlog"
+
 type Config struct {
 	Name string
 	Addr string
@@ -27,5 +29,10 @@ type Config struct {
 	Jwt struct {
 		Secret string
 		Expire int64
+	}
+
+	Tlog struct {
+		Mode  tlog.LogMod //运行模式
+		Label string      //加载日志输出的标签
 	}
 }

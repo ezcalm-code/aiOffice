@@ -1,9 +1,11 @@
 package start
 
 import (
+	"gitee.com/dn-jinmin/tlog"
 	"github.com/gin-gonic/gin"
 
 	"aiOffice/internal/handler"
+	"aiOffice/internal/middleware"
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/httpx"
 )
@@ -25,6 +27,14 @@ func NewHandle(svc *svc.ServiceContext) *handle {
 	if len(svc.Config.Addr) > 0 {
 		h.addr = svc.Config.Addr
 	}
+
+	// 初始化
+	tlog.Init(
+		tlog.WithMode(svc.Config.Tlog.Mode),
+		tlog.WithLabel(svc.Config.Tlog.Label),
+	)
+
+	h.srv.Use(middleware.NewLog().Handler)
 
 	httpx.SetErrorHandler(handler.ErrorHandler)
 
