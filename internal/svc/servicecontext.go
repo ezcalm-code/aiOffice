@@ -19,6 +19,9 @@ type ServiceContext struct {
 	UserModel           model.UserModel
 	DepartmentModel     model.DepartmentModel
 	DepartmentuserModel model.DepartmentuserModel
+	TodoRecordModel     model.TodoRecordModel
+	UserTodo            model.UserTodoModel
+	Todo                model.TodoModel
 	Jwt                 *middleware.Jwt
 }
 
@@ -41,6 +44,9 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		UserModel:           model.NewUserModel(mongoDB),
 		DepartmentModel:     model.NewDepartmentModel(mongoDB),
 		DepartmentuserModel: model.NewDepartmentuserModel(mongoDB),
+		TodoRecordModel:     model.NewTodoRecordModel(mongoDB),
+		UserTodo:            model.NewUserTodoModel(mongoDB),
+		Todo:                model.NewTodoModel(mongoDB),
 		Jwt:                 middleware.NewJwt(c.Jwt.Secret),
 	}
 

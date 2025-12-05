@@ -108,3 +108,65 @@ type DepartmentSoaResp struct {
 	Users    []*DepartmentUser `json:"users, omitempty"`    // 部门用户列表
 	Child    []*Department     `json:"child, omitempty"`    // 子部门列表
 }
+
+type TodoRecord struct {
+	TodoId   string `json:"todoId,omitempty"`
+	UserId   string `json:"userId,omitempty"`
+	UserName string `json:"userName,omitempty"`
+	Content  string `json:"content,omitempty"`
+	Image    string `json:"image,omitempty"`
+	CreateAt int64  `json:"createAt,omitempty"`
+}
+
+type Todo struct {
+	ID          string        `json:"id,omitempty"`
+	CreatorId   string        `json:"creatorId,omitempty"`
+	CreatorName string        `json:"creatorName,omitempty"`
+	Title       string        `json:"title,omitempty"`
+	DeadlineAt  int64         `json:"deadlineAt,omitempty"`
+	Desc        string        `json:"desc,omitempty"`
+	Status      int           `json:"status,omitempty"`
+	Records     []*TodoRecord `json:"records,omitempty"`
+	ExecuteIds  []string      `json:"executeIds,omitempty"` // 待办执行人
+	TodoStatus  int           `json:"todoStatus,omitempty"`
+}
+
+type UserTodo struct {
+	ID         string `json:"id,omitempty"`
+	UserId     string `json:"userId,omitempty"`
+	UserName   string `json:"userName,omitempty"`
+	TodoId     string `json:"todoId,omitempty"`
+	TodoStatus int    `json:"todoStatus,omitempty"` // 待办事项的状态
+}
+
+type TodoInfoResp struct {
+	ID          string        `json:"id,omitempty"`
+	CreatorId   string        `json:"creatorId,omitempty"`
+	CreatorName string        `json:"creatorName,omitempty"`
+	Title       string        `json:"title,omitempty"`
+	DeadlineAt  int64         `json:"deadlineAt,omitempty"`
+	Desc        string        `json:"desc,omitempty"`
+	Records     []*TodoRecord `json:"records,omitempty"`
+	ExecuteIds  []*UserTodo   `json:"executeIds,omitempty"`
+	Status      int           `json:"status,omitempty"`
+	TodoStatus  int           `json:"todoStatus,omitempty"`
+}
+
+type FinishedTodoReq struct {
+	UserId string `json:"userId"`
+	TodoId string `json:"todoId"`
+}
+
+type TodoListReq struct {
+	Id        string `json:"id,omitempty"`
+	UserId    string `json:"userId,omitempty"`
+	Page      int    `json:"page,omitempty"`
+	Count     int    `json:"count,omitempty"`
+	StartTime int64  `json:"startTime,omitempty"`
+	EndTime   int64  `json:"endTime,omitempty"`
+}
+
+type TodoListResp struct {
+	Count int64   `json:"count"`
+	List  []*Todo `json:"data"`
+}

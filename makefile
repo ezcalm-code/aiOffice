@@ -9,6 +9,13 @@ department:
 departmentuser:
 	../goctl-gin/goctl-gin model mongo --type departmentuser --dir ./internal/model
 
+todoRecord:
+	../goctl-gin/goctl-gin model mongo --type todoRecord --dir ./internal/model
+userTodo:
+	../goctl-gin/goctl-gin model mongo --type userTodo --dir ./internal/model
+todo:
+	../goctl-gin/goctl-gin model mongo --type todo --dir ./internal/model
+
 swagger:
 	swag init
 
