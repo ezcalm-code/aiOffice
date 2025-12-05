@@ -52,3 +52,59 @@ type IdRespInfo struct {
 	Code int     `json:"code"`
 	Data *IdResp `json:"data"`
 }
+
+type Department struct {
+	Id         string        `json:"id, omitempty"`         // 部门ID
+	Name       string        `json:"name, omitempty"`       // 部门名称
+	ParentId   string        `json:"parentId, omitempty"`   // 父部门ID
+	ParentPath string        `json:"parentPath, omitempty"` // 父部门路径
+	Level      int           `json:"level, omitempty"`      // 部门层级
+	LeaderId   string        `json:"leaderId, omitempty"`   // 部门负责人ID
+	Leader     string        `json:"leader, omitempty"`     // 部门负责人姓名
+	Count      int64         `json:"count, omitempty"`      // 部门人数
+	Child      []*Department `json:"child, omitempty"`      // 子部门列表
+}
+
+type DepartmentUser struct {
+	Id       string `json:"id,omitempty"`       // 关联ID
+	UserId   string `json:"user,omitempty"`     // 用户ID
+	DepId    string `json:"dep,omitempty"`      // 部门ID
+	UserName string `json:"userName,omitempty"` // 用户姓名
+}
+
+type DepartmentListReq struct {
+	DepId  string   `json:"depId,omitempty"`  // 单个部门ID
+	DepIds []string `json:"depIds,omitempty"` // 多个部门ID列表
+}
+
+type DepartmentPathReq struct {
+	DepId  string `path:"depId,omitempty"`  // 部门ID路径参数
+	UserId string `path:"userId,omitempty"` // 用户ID路径参数
+}
+
+type SetDepartmentUser struct {
+	DepId   string   `json:"depId"`   // 部门ID
+	UserIds []string `json:"userIds"` // 用户ID列表
+}
+
+type AddDepartmentUser struct {
+	DepId  string `json:"depId"`  // 部门ID
+	UserId string `json:"userId"` // 要添加的用户ID
+}
+
+type RemoveDepartmentUser struct {
+	DepId  string `json:"depId"`  // 部门ID
+	UserId string `json:"userId"` // 要删除的用户ID
+}
+
+type DepartmentSoaResp struct {
+	Id       string            `json:"id, omitempty"`       // 部门ID
+	Name     string            `json:"name, omitempty"`     // 部门名称
+	ParentId string            `json:"parentId, omitempty"` // 父部门ID
+	Level    int               `json:"level, omitempty"`    // 部门层级
+	LeaderId string            `json:"leaderId, omitempty"` // 负责人ID
+	Leader   string            `json:"leader, omitempty"`   // 负责人姓名
+	Count    int64             `json:"count, omitempty"`    // 部门人数
+	Users    []*DepartmentUser `json:"users, omitempty"`    // 部门用户列表
+	Child    []*Department     `json:"child, omitempty"`    // 子部门列表
+}

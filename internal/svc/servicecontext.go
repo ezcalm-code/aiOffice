@@ -15,9 +15,11 @@ type ServiceContext struct {
 	Config config.Config
 
 	// todo repo and pkg object instance
-	Mongo     *mongo.Database
-	UserModel model.UserModel
-	Jwt       *middleware.Jwt
+	Mongo               *mongo.Database
+	UserModel           model.UserModel
+	DepartmentModel     model.DepartmentModel
+	DepartmentuserModel model.DepartmentuserModel
+	Jwt                 *middleware.Jwt
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -34,10 +36,12 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	}
 
 	svc := &ServiceContext{
-		Config:    c,
-		Mongo:     mongoDB,
-		UserModel: model.NewUserModel(mongoDB),
-		Jwt:       middleware.NewJwt(c.Jwt.Secret),
+		Config:              c,
+		Mongo:               mongoDB,
+		UserModel:           model.NewUserModel(mongoDB),
+		DepartmentModel:     model.NewDepartmentModel(mongoDB),
+		DepartmentuserModel: model.NewDepartmentuserModel(mongoDB),
+		Jwt:                 middleware.NewJwt(c.Jwt.Secret),
 	}
 
 	return svc, initAdminUser(svc)
@@ -48,7 +52,7 @@ func initAdminUser(svc *ServiceContext) error {
 
 	// 检查管理员是否存在
 	admin, err := svc.UserModel.FindAdminUser(ctx)
-	if err != nil && err != model.ErrNotUser {
+	if err != nil && err != model.ErrNotFindUser {
 		return err
 	}
 	if admin != nil {

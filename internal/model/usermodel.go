@@ -81,7 +81,7 @@ func (m *defaultUserModel) FindByName(ctx context.Context, name string) (*User, 
 	case nil:
 		return &user, nil
 	case mongo.ErrNoDocuments:
-		return nil, ErrNotUser
+		return nil, ErrNotFindUser
 	default:
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (m *defaultUserModel) FindAdminUser(ctx context.Context) (*User, error) {
 	case nil:
 		return &user, nil
 	case mongo.ErrNoDocuments:
-		return nil, ErrNotUser
+		return nil, ErrNotFindUser
 	default:
 		return nil, err
 	}
