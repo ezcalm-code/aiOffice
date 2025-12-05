@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserModel interface {
@@ -17,6 +18,7 @@ type UserModel interface {
 	FindAdminUser(ctx context.Context) (*User, error)
 	Update(ctx context.Context, data *User) error
 	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, ids []string, name string, page, count int) ([]*User, int64, error)
 }
 
 type defaultUserModel struct {
@@ -98,4 +100,64 @@ func (m *defaultUserModel) FindAdminUser(ctx context.Context) (*User, error) {
 	default:
 		return nil, err
 	}
+}
+
+func (m *defaultUserModel) List(ctx context.Context, ids []string, name string, page, count int) ([]*User, int64, error) {
+	filter := bson.M{}
+
+	// 按ID列表查询
+	if len(ids) > 0 {
+		oids := make([]primitive.ObjectID, 0, len(ids))
+		for _, id := range ids {
+			oid, err := primitive.ObjectIDFromHex(id)
+			if err != nil {
+				continue
+			}
+			oids = append(oids, oid)
+		}
+		if len(oids) > 0 {
+			filter["_id"] = bson.M{"$in": oids}
+		}
+	}
+
+	// 按用户名模糊查询
+	if name != "" {
+		filter["name"] = bson.M{"$regex": name, "$options": "i"}
+	}
+
+	// 获取总数
+	total, err := m.col.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 分页查询
+	if page < 1 {
+		page = 1
+	}
+	if count < 1 {
+		count = 10
+	}
+	skip := int64((page - 1) * count)
+
+	findOptions := options.Find()
+	findOptions.SetSkip(skip)
+	findOptions.SetLimit(int64(count))
+
+	cursor, err := m.col.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []*User
+	if err = cursor.All(ctx, &users); err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
+}
+
+func int64Ptr(i int64) *int64 {
+	return &i
 }

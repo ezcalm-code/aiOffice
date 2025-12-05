@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"aiOffice/internal/aiOffice/doc/start"
 	"aiOffice/internal/config"
+	"aiOffice/internal/handler/start"
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/conf"
 )
