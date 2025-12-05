@@ -1,7 +1,7 @@
 syntax="v1"
 
 info(
-    tittle: "用户模块"
+    tittle: "部门模块"
     author: "wsj"
 )
 
