@@ -15,6 +15,11 @@ type DepartmentuserModel interface {
 	FindOne(ctx context.Context, id string) (*Departmentuser, error)
 	Update(ctx context.Context, data *Departmentuser) error
 	Delete(ctx context.Context, id string) error
+	FindByDepId(ctx context.Context, depId string) ([]*Departmentuser, error)
+	FindByUserId(ctx context.Context, userId string) ([]*Departmentuser, error)
+	DeleteByDepIdAndUserId(ctx context.Context, depId, userId string) error
+	DeleteByDepId(ctx context.Context, depId string) error
+	FindByDepIds(ctx context.Context, depIds []string) ([]*Departmentuser, error)
 }
 
 type defaultDepartmentuserModel struct {
@@ -70,4 +75,56 @@ func (m *defaultDepartmentuserModel) Delete(ctx context.Context, id string) erro
 	}
 	_, err = m.col.DeleteOne(ctx, bson.M{"_id": oid})
 	return err
+}
+
+func (m *defaultDepartmentuserModel) FindByDepId(ctx context.Context, depId string) ([]*Departmentuser, error) {
+	cursor, err := m.col.Find(ctx, bson.M{"depId": depId})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []*Departmentuser
+	if err = cursor.All(ctx, &users); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (m *defaultDepartmentuserModel) FindByUserId(ctx context.Context, userId string) ([]*Departmentuser, error) {
+	cursor, err := m.col.Find(ctx, bson.M{"userId": userId})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []*Departmentuser
+	if err = cursor.All(ctx, &users); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (m *defaultDepartmentuserModel) DeleteByDepIdAndUserId(ctx context.Context, depId, userId string) error {
+	_, err := m.col.DeleteOne(ctx, bson.M{"depId": depId, "userId": userId})
+	return err
+}
+
+func (m *defaultDepartmentuserModel) DeleteByDepId(ctx context.Context, depId string) error {
+	_, err := m.col.DeleteMany(ctx, bson.M{"depId": depId})
+	return err
+}
+
+func (m *defaultDepartmentuserModel) FindByDepIds(ctx context.Context, depIds []string) ([]*Departmentuser, error) {
+	cursor, err := m.col.Find(ctx, bson.M{"depId": bson.M{"$in": depIds}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []*Departmentuser
+	if err = cursor.All(ctx, &users); err != nil {
+		return nil, err
+	}
+	return users, nil
 }

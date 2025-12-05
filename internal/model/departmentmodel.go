@@ -15,6 +15,9 @@ type DepartmentModel interface {
 	FindOne(ctx context.Context, id string) (*Department, error)
 	Update(ctx context.Context, data *Department) error
 	Delete(ctx context.Context, id string) error
+	FindAll(ctx context.Context) ([]*Department, error)
+	FindByParentId(ctx context.Context, parentId string) ([]*Department, error)
+	FindByIds(ctx context.Context, ids []string) ([]*Department, error)
 }
 
 type defaultDepartmentModel struct {
@@ -70,4 +73,55 @@ func (m *defaultDepartmentModel) Delete(ctx context.Context, id string) error {
 	}
 	_, err = m.col.DeleteOne(ctx, bson.M{"_id": oid})
 	return err
+}
+
+func (m *defaultDepartmentModel) FindAll(ctx context.Context) ([]*Department, error) {
+	cursor, err := m.col.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var departments []*Department
+	if err = cursor.All(ctx, &departments); err != nil {
+		return nil, err
+	}
+	return departments, nil
+}
+
+func (m *defaultDepartmentModel) FindByParentId(ctx context.Context, parentId string) ([]*Department, error) {
+	cursor, err := m.col.Find(ctx, bson.M{"parentId": parentId})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var departments []*Department
+	if err = cursor.All(ctx, &departments); err != nil {
+		return nil, err
+	}
+	return departments, nil
+}
+
+func (m *defaultDepartmentModel) FindByIds(ctx context.Context, ids []string) ([]*Department, error) {
+	oids := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		oid, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			continue
+		}
+		oids = append(oids, oid)
+	}
+
+	cursor, err := m.col.Find(ctx, bson.M{"_id": bson.M{"$in": oids}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var departments []*Department
+	if err = cursor.All(ctx, &departments); err != nil {
+		return nil, err
+	}
+	return departments, nil
 }
