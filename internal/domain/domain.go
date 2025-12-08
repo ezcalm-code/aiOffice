@@ -251,10 +251,10 @@ type DisposeReq struct {
 }
 
 type ApprovalListReq struct {
-	UserId string `json:"userId,omitempty"`
-	Type   int    `json:"type,omitempty"`
-	Page   int    `json:"page,omitempty"`
-	Count  int    `json:"count,omitempty"`
+	UserId string `json:"userId,omitempty" form:"userId"`
+	Type   int    `json:"type,omitempty" form:"type"`
+	Page   int    `json:"page,omitempty" form:"page"`
+	Count  int    `json:"count,omitempty" form:"count"`
 }
 
 type ApprovalList struct {

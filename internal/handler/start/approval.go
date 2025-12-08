@@ -26,7 +26,7 @@ func (h *Approval) InitRegister(engine *gin.Engine) {
 	g.GET("/:id", h.Info)
 	g.POST("", h.Create)
 	g.PUT("/dispose", h.Dispose)
-	g.GET("/list", h.List)
+	g.POST("/list", h.List)
 }
 
 func (h *Approval) Info(ctx *gin.Context) {

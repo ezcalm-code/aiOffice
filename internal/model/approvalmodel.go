@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ApprovalModel interface {
@@ -15,6 +16,7 @@ type ApprovalModel interface {
 	FindOne(ctx context.Context, id string) (*Approval, error)
 	Update(ctx context.Context, data *Approval) error
 	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, userId string, approvalType int, page, count int) ([]*Approval, int64, error)
 }
 
 type defaultApprovalModel struct {
@@ -70,4 +72,54 @@ func (m *defaultApprovalModel) Delete(ctx context.Context, id string) error {
 	}
 	_, err = m.col.DeleteOne(ctx, bson.M{"_id": oid})
 	return err
+}
+
+func (m *defaultApprovalModel) List(ctx context.Context, userId string, approvalType int, page, count int) ([]*Approval, int64, error) {
+	var conditions []bson.M
+
+	if userId != "" {
+		// 查询用户参与的审批（包括创建者和审批人）
+		conditions = append(conditions, bson.M{
+			"$or": []bson.M{
+				{"userId": userId},
+				{"participation": userId},
+			},
+		})
+	}
+
+	if approvalType > 0 {
+		conditions = append(conditions, bson.M{"type": ApprovalType(approvalType)})
+	}
+
+	filter := bson.M{}
+	if len(conditions) > 0 {
+		filter["$and"] = conditions
+	}
+
+	total, err := m.col.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if count < 1 {
+		count = 10
+	}
+	skip := int64((page - 1) * count)
+
+	opts := options.Find().SetSkip(skip).SetLimit(int64(count)).SetSort(bson.M{"createAt": -1})
+	cursor, err := m.col.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var approvals []*Approval
+	if err = cursor.All(ctx, &approvals); err != nil {
+		return nil, 0, err
+	}
+
+	return approvals, total, nil
 }
