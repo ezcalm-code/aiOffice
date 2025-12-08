@@ -32,7 +32,7 @@ func NewTodo(svcCtx *svc.ServiceContext) Todo {
 
 // Info 获取待办详情
 func (l *todo) Info(ctx context.Context, req *domain.IdPathReq) (resp *domain.TodoInfoResp, err error) {
-	todoData, err := l.svcCtx.Todo.FindOne(ctx, req.Id)
+	todoData, err := l.svcCtx.TodoModel.FindOne(ctx, req.Id)
 	if err != nil {
 		if err == model.ErrNotFound {
 			return nil, model.ErrTodoNotFound
@@ -41,7 +41,7 @@ func (l *todo) Info(ctx context.Context, req *domain.IdPathReq) (resp *domain.To
 	}
 
 	// 获取执行人信息
-	userTodos, err := l.svcCtx.UserTodo.FindByTodoId(ctx, req.Id)
+	userTodos, err := l.svcCtx.UserTodoModel.FindByTodoId(ctx, req.Id)
 	if err != nil {
 		return nil, xerr.WithMessage(err, "查询执行人失败")
 	}
@@ -110,7 +110,7 @@ func (l *todo) Create(ctx context.Context, req *domain.Todo) (resp *domain.IdRes
 		}
 	}
 
-	err = l.svcCtx.Todo.Insert(ctx, todoData)
+	err = l.svcCtx.TodoModel.Insert(ctx, todoData)
 	if err != nil {
 		return nil, xerr.WithMessage(err, "创建待办失败")
 	}
@@ -130,7 +130,7 @@ func (l *todo) Create(ctx context.Context, req *domain.Todo) (resp *domain.IdRes
 			TodoId:     todoId,
 			TodoStatus: 0,
 		}
-		_ = l.svcCtx.UserTodo.Insert(ctx, userTodo)
+		_ = l.svcCtx.UserTodoModel.Insert(ctx, userTodo)
 	}
 
 	return &domain.IdResp{Id: todoId}, nil
@@ -138,7 +138,7 @@ func (l *todo) Create(ctx context.Context, req *domain.Todo) (resp *domain.IdRes
 
 // Edit 编辑待办
 func (l *todo) Edit(ctx context.Context, req *domain.Todo) (err error) {
-	todoData, err := l.svcCtx.Todo.FindOne(ctx, req.ID)
+	todoData, err := l.svcCtx.TodoModel.FindOne(ctx, req.ID)
 	if err != nil {
 		if err == model.ErrNotFound {
 			return model.ErrTodoNotFound
@@ -165,7 +165,7 @@ func (l *todo) Edit(ctx context.Context, req *domain.Todo) (err error) {
 		todoData.ExecuteIds = req.ExecuteIds
 
 		// 删除原有执行人关联
-		_ = l.svcCtx.UserTodo.DeleteByTodoId(ctx, req.ID)
+		_ = l.svcCtx.UserTodoModel.DeleteByTodoId(ctx, req.ID)
 
 		// 创建新的执行人关联
 		for _, userId := range req.ExecuteIds {
@@ -180,11 +180,11 @@ func (l *todo) Edit(ctx context.Context, req *domain.Todo) (err error) {
 				TodoId:     req.ID,
 				TodoStatus: 0,
 			}
-			_ = l.svcCtx.UserTodo.Insert(ctx, userTodo)
+			_ = l.svcCtx.UserTodoModel.Insert(ctx, userTodo)
 		}
 	}
 
-	err = l.svcCtx.Todo.Update(ctx, todoData)
+	err = l.svcCtx.TodoModel.Update(ctx, todoData)
 	if err != nil {
 		return xerr.WithMessage(err, "更新待办失败")
 	}
@@ -195,7 +195,7 @@ func (l *todo) Edit(ctx context.Context, req *domain.Todo) (err error) {
 // Delete 删除待办
 func (l *todo) Delete(ctx context.Context, req *domain.IdPathReq) (err error) {
 	// 删除待办
-	err = l.svcCtx.Todo.Delete(ctx, req.Id)
+	err = l.svcCtx.TodoModel.Delete(ctx, req.Id)
 	if err != nil {
 		return xerr.WithMessage(err, "删除待办失败")
 	}
@@ -204,7 +204,7 @@ func (l *todo) Delete(ctx context.Context, req *domain.IdPathReq) (err error) {
 	_ = l.svcCtx.TodoRecordModel.DeleteByTodoId(ctx, req.Id)
 
 	// 删除执行人关联
-	_ = l.svcCtx.UserTodo.DeleteByTodoId(ctx, req.Id)
+	_ = l.svcCtx.UserTodoModel.DeleteByTodoId(ctx, req.Id)
 
 	return nil
 }
@@ -212,7 +212,7 @@ func (l *todo) Delete(ctx context.Context, req *domain.IdPathReq) (err error) {
 // Finish 完成待办
 func (l *todo) Finish(ctx context.Context, req *domain.FinishedTodoReq) (err error) {
 	// 查询用户待办关联
-	userTodo, err := l.svcCtx.UserTodo.FindByUserIdAndTodoId(ctx, req.UserId, req.TodoId)
+	userTodo, err := l.svcCtx.UserTodoModel.FindByUserIdAndTodoId(ctx, req.UserId, req.TodoId)
 	if err != nil {
 		if err == model.ErrNotFound {
 			return model.ErrTodoNotFound
@@ -222,13 +222,13 @@ func (l *todo) Finish(ctx context.Context, req *domain.FinishedTodoReq) (err err
 
 	// 更新用户待办状态为已完成
 	userTodo.TodoStatus = 1
-	err = l.svcCtx.UserTodo.Update(ctx, userTodo)
+	err = l.svcCtx.UserTodoModel.Update(ctx, userTodo)
 	if err != nil {
 		return xerr.WithMessage(err, "更新用户待办状态失败")
 	}
 
 	// 检查是否所有执行人都已完成
-	allUserTodos, err := l.svcCtx.UserTodo.FindByTodoId(ctx, req.TodoId)
+	allUserTodos, err := l.svcCtx.UserTodoModel.FindByTodoId(ctx, req.TodoId)
 	if err != nil {
 		return xerr.WithMessage(err, "查询待办执行人失败")
 	}
@@ -243,12 +243,12 @@ func (l *todo) Finish(ctx context.Context, req *domain.FinishedTodoReq) (err err
 
 	// 如果所有人都完成，更新待办状态
 	if allFinished {
-		todoData, err := l.svcCtx.Todo.FindOne(ctx, req.TodoId)
+		todoData, err := l.svcCtx.TodoModel.FindOne(ctx, req.TodoId)
 		if err != nil {
 			return xerr.WithMessage(err, "查询待办失败")
 		}
 		todoData.TodoStatus = 1
-		err = l.svcCtx.Todo.Update(ctx, todoData)
+		err = l.svcCtx.TodoModel.Update(ctx, todoData)
 		if err != nil {
 			return xerr.WithMessage(err, "更新待办状态失败")
 		}
@@ -260,7 +260,7 @@ func (l *todo) Finish(ctx context.Context, req *domain.FinishedTodoReq) (err err
 // CreateRecord 创建操作记录（追加到Todo.Records数组中）
 func (l *todo) CreateRecord(ctx context.Context, req *domain.TodoRecord) (err error) {
 	// 查询待办
-	todoData, err := l.svcCtx.Todo.FindOne(ctx, req.TodoId)
+	todoData, err := l.svcCtx.TodoModel.FindOne(ctx, req.TodoId)
 	if err != nil {
 		if err == model.ErrNotFound {
 			return model.ErrTodoNotFound
@@ -282,7 +282,7 @@ func (l *todo) CreateRecord(ctx context.Context, req *domain.TodoRecord) (err er
 	todoData.Records = append(todoData.Records, record)
 
 	// 更新待办
-	err = l.svcCtx.Todo.Update(ctx, todoData)
+	err = l.svcCtx.TodoModel.Update(ctx, todoData)
 	if err != nil {
 		return xerr.WithMessage(err, "创建操作记录失败")
 	}
@@ -297,7 +297,7 @@ func (l *todo) List(ctx context.Context, req *domain.TodoListReq) (resp *domain.
 
 	// 如果指定了用户ID，先查询用户关联的待办
 	if req.UserId != "" {
-		userTodos, err := l.svcCtx.UserTodo.FindByUserId(ctx, req.UserId)
+		userTodos, err := l.svcCtx.UserTodoModel.FindByUserId(ctx, req.UserId)
 		if err != nil {
 			return nil, xerr.WithMessage(err, "查询用户待办关联失败")
 		}
@@ -311,13 +311,13 @@ func (l *todo) List(ctx context.Context, req *domain.TodoListReq) (resp *domain.
 			todoIds = append(todoIds, ut.TodoId)
 		}
 
-		todos, err = l.svcCtx.Todo.FindByIds(ctx, todoIds)
+		todos, err = l.svcCtx.TodoModel.FindByIds(ctx, todoIds)
 		if err != nil {
 			return nil, xerr.WithMessage(err, "查询待办列表失败")
 		}
 		total = int64(len(todos))
 	} else {
-		todos, total, err = l.svcCtx.Todo.List(ctx, "", req.StartTime, req.EndTime, req.Page, req.Count)
+		todos, total, err = l.svcCtx.TodoModel.List(ctx, "", req.StartTime, req.EndTime, req.Page, req.Count)
 		if err != nil {
 			return nil, xerr.WithMessage(err, "查询待办列表失败")
 		}
