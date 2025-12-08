@@ -19,6 +19,9 @@ todo:
 approval:
 	../goctl-gin/goctl-gin model mongo --type approval --dir ./internal/model
 
+chatLog:
+	../goctl-gin/goctl-gin model mongo --type chatLog --dir ./internal/model
+
 swagger:
 	swag init
 
