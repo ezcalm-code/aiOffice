@@ -2,6 +2,10 @@
 Name: AIOffice
 Addr: 0.0.0.0:8001
 
+#websocket配置
+Ws:
+  Addr: 0.0.0.0:9001
+
 #Mongo配置
 Mongo:
   User: ""

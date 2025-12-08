@@ -35,4 +35,7 @@ type Config struct {
 		Mode  tlog.LogMod //运行模式
 		Label string      //加载日志输出的标签
 	}
+	Ws struct {
+		Addr string
+	}
 }

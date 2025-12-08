@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"sync"
 
 	"aiOffice/internal/config"
 	"aiOffice/internal/handler/start"
+	"aiOffice/internal/handler/ws"
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/conf"
 )
@@ -28,19 +30,9 @@ import (
 // @name Authorization
 // @description JWT token, format: Bearer {token}
 
-type Serve interface {
-	Run() error
-}
-
-const (
-	StartAPI = "./doc/start.api"
-
-	// add other module
-)
-
 var (
 	configFile = flag.String("f", "./etc/local/config.yaml", "the config file")
-	modeType   = flag.String("m", "./doc/start.api", "server run mod")
+	sw         sync.WaitGroup
 )
 
 func main() {
@@ -49,19 +41,27 @@ func main() {
 	var cfg config.Config
 	conf.MustLoad(*configFile, &cfg)
 
-	svc, err := svc.NewServiceContext(cfg)
+	// 初始化唯一服务上下文
+	svcContext, err := svc.NewServiceContext(cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	var srv Serve
-	switch *modeType {
-	case StartAPI:
-		srv = start.NewHandle(svc)
-	// add other module case
-	default:
-		panic("请指定正确的服务")
-	}
+	sw.Add(1)
+	// 运行http服务
+	go func() {
+		defer sw.Done()
+		srv := start.NewHandle(svcContext)
+		srv.Run()
+	}()
 
-	srv.Run()
+	sw.Add(1)
+	// 运行websocket服务
+	go func() {
+		defer sw.Done()
+		srv := ws.NewWs(*svcContext)
+		srv.Run()
+	}()
+
+	sw.Wait()
 }

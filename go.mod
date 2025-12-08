@@ -6,6 +6,7 @@ require (
 	gitee.com/dn-jinmin/tlog v1.1.14
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/gorilla/websocket v1.5.3
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.21.0
 	github.com/swaggo/swag v1.16.6
