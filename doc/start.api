@@ -4,6 +4,7 @@ import "user.api"
 import "common.api"
 import "department.api"
 import "todo.api"
+import "approval.api"
 
 info(
     tittle: "aiOffice"

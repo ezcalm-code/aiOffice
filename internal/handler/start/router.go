@@ -11,6 +11,7 @@ func initHandler(svc *svc.ServiceContext) []Handler {
 		userLogic       = logic.NewUser(svc)
 		departmentLogic = logic.NewDepartment(svc)
 		todoLogic       = logic.NewTodo(svc)
+		approvalLogic   = logic.NewApproval(svc)
 	)
 
 	// new handlers
@@ -18,11 +19,13 @@ func initHandler(svc *svc.ServiceContext) []Handler {
 		user       = NewUser(svc, userLogic)
 		department = NewDepartment(svc, departmentLogic)
 		todo       = NewTodo(svc, todoLogic)
+		approval   = NewApproval(svc, approvalLogic)
 	)
 
 	return []Handler{
 		user,
 		department,
 		todo,
+		approval,
 	}
 }

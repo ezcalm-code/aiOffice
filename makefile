@@ -16,6 +16,9 @@ userTodo:
 todo:
 	../goctl-gin/goctl-gin model mongo --type todo --dir ./internal/model
 
+approval:
+	../goctl-gin/goctl-gin model mongo --type approval --dir ./internal/model
+
 swagger:
 	swag init
 

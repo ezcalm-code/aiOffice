@@ -20,8 +20,9 @@ type ServiceContext struct {
 	DepartmentModel     model.DepartmentModel
 	DepartmentuserModel model.DepartmentuserModel
 	TodoRecordModel     model.TodoRecordModel
-	UserTodo            model.UserTodoModel
-	Todo                model.TodoModel
+	UserTodoModel       model.UserTodoModel
+	TodoModel           model.TodoModel
+	ApprovalModel       model.ApprovalModel
 	Jwt                 *middleware.Jwt
 }
 
@@ -45,8 +46,9 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		DepartmentModel:     model.NewDepartmentModel(mongoDB),
 		DepartmentuserModel: model.NewDepartmentuserModel(mongoDB),
 		TodoRecordModel:     model.NewTodoRecordModel(mongoDB),
-		UserTodo:            model.NewUserTodoModel(mongoDB),
-		Todo:                model.NewTodoModel(mongoDB),
+		UserTodoModel:       model.NewUserTodoModel(mongoDB),
+		TodoModel:           model.NewTodoModel(mongoDB),
+		ApprovalModel:       model.NewApprovalModel(mongoDB),
 		Jwt:                 middleware.NewJwt(c.Jwt.Secret),
 	}
 
