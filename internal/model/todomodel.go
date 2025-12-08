@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type TodoModel interface {
@@ -15,6 +16,8 @@ type TodoModel interface {
 	FindOne(ctx context.Context, id string) (*Todo, error)
 	Update(ctx context.Context, data *Todo) error
 	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, userId string, startTime, endTime int64, page, count int) ([]*Todo, int64, error)
+	FindByIds(ctx context.Context, ids []string) ([]*Todo, error)
 }
 
 type defaultTodoModel struct {
@@ -70,4 +73,73 @@ func (m *defaultTodoModel) Delete(ctx context.Context, id string) error {
 	}
 	_, err = m.col.DeleteOne(ctx, bson.M{"_id": oid})
 	return err
+}
+
+func (m *defaultTodoModel) List(ctx context.Context, userId string, startTime, endTime int64, page, count int) ([]*Todo, int64, error) {
+	filter := bson.M{}
+
+	if userId != "" {
+		filter["creatorId"] = userId
+	}
+
+	if startTime > 0 {
+		filter["createAt"] = bson.M{"$gte": startTime}
+	}
+	if endTime > 0 {
+		if _, ok := filter["createAt"]; ok {
+			filter["createAt"].(bson.M)["$lte"] = endTime
+		} else {
+			filter["createAt"] = bson.M{"$lte": endTime}
+		}
+	}
+
+	total, err := m.col.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if count < 1 {
+		count = 10
+	}
+	skip := int64((page - 1) * count)
+
+	opts := options.Find().SetSkip(skip).SetLimit(int64(count)).SetSort(bson.M{"createAt": -1})
+	cursor, err := m.col.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var todos []*Todo
+	if err = cursor.All(ctx, &todos); err != nil {
+		return nil, 0, err
+	}
+
+	return todos, total, nil
+}
+
+func (m *defaultTodoModel) FindByIds(ctx context.Context, ids []string) ([]*Todo, error) {
+	oids := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		oid, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			continue
+		}
+		oids = append(oids, oid)
+	}
+
+	cursor, err := m.col.Find(ctx, bson.M{"_id": bson.M{"$in": oids}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var todos []*Todo
+	if err = cursor.All(ctx, &todos); err != nil {
+		return nil, err
+	}
+	return todos, nil
 }

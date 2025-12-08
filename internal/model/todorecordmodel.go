@@ -15,6 +15,8 @@ type TodoRecordModel interface {
 	FindOne(ctx context.Context, id string) (*TodoRecord, error)
 	Update(ctx context.Context, data *TodoRecord) error
 	Delete(ctx context.Context, id string) error
+	FindByTodoId(ctx context.Context, todoId string) ([]*TodoRecord, error)
+	DeleteByTodoId(ctx context.Context, todoId string) error
 }
 
 type defaultTodoRecordModel struct {
@@ -69,5 +71,24 @@ func (m *defaultTodoRecordModel) Delete(ctx context.Context, id string) error {
 		return ErrInvalidObjectId
 	}
 	_, err = m.col.DeleteOne(ctx, bson.M{"_id": oid})
+	return err
+}
+
+func (m *defaultTodoRecordModel) FindByTodoId(ctx context.Context, todoId string) ([]*TodoRecord, error) {
+	cursor, err := m.col.Find(ctx, bson.M{"todoId": todoId})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var records []*TodoRecord
+	if err = cursor.All(ctx, &records); err != nil {
+		return nil, err
+	}
+	return records, nil
+}
+
+func (m *defaultTodoRecordModel) DeleteByTodoId(ctx context.Context, todoId string) error {
+	_, err := m.col.DeleteMany(ctx, bson.M{"todoId": todoId})
 	return err
 }

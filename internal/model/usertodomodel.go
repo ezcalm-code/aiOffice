@@ -15,6 +15,10 @@ type UserTodoModel interface {
 	FindOne(ctx context.Context, id string) (*UserTodo, error)
 	Update(ctx context.Context, data *UserTodo) error
 	Delete(ctx context.Context, id string) error
+	FindByTodoId(ctx context.Context, todoId string) ([]*UserTodo, error)
+	FindByUserId(ctx context.Context, userId string) ([]*UserTodo, error)
+	FindByUserIdAndTodoId(ctx context.Context, userId, todoId string) (*UserTodo, error)
+	DeleteByTodoId(ctx context.Context, todoId string) error
 }
 
 type defaultUserTodoModel struct {
@@ -69,5 +73,51 @@ func (m *defaultUserTodoModel) Delete(ctx context.Context, id string) error {
 		return ErrInvalidObjectId
 	}
 	_, err = m.col.DeleteOne(ctx, bson.M{"_id": oid})
+	return err
+}
+
+func (m *defaultUserTodoModel) FindByTodoId(ctx context.Context, todoId string) ([]*UserTodo, error) {
+	cursor, err := m.col.Find(ctx, bson.M{"todoId": todoId})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var userTodos []*UserTodo
+	if err = cursor.All(ctx, &userTodos); err != nil {
+		return nil, err
+	}
+	return userTodos, nil
+}
+
+func (m *defaultUserTodoModel) FindByUserId(ctx context.Context, userId string) ([]*UserTodo, error) {
+	cursor, err := m.col.Find(ctx, bson.M{"userId": userId})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var userTodos []*UserTodo
+	if err = cursor.All(ctx, &userTodos); err != nil {
+		return nil, err
+	}
+	return userTodos, nil
+}
+
+func (m *defaultUserTodoModel) FindByUserIdAndTodoId(ctx context.Context, userId, todoId string) (*UserTodo, error) {
+	var data UserTodo
+	err := m.col.FindOne(ctx, bson.M{"userId": userId, "todoId": todoId}).Decode(&data)
+	switch err {
+	case nil:
+		return &data, nil
+	case mongo.ErrNoDocuments:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
+func (m *defaultUserTodoModel) DeleteByTodoId(ctx context.Context, todoId string) error {
+	_, err := m.col.DeleteMany(ctx, bson.M{"todoId": todoId})
 	return err
 }
