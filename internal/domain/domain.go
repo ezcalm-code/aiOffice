@@ -259,12 +259,14 @@ type ApprovalListReq struct {
 
 type ApprovalList struct {
 	Id              string `json:"id"`
+	No              string `json:"no"`
 	Type            int    `json:"type"`
 	Status          int    `json:"status"`
 	Title           string `json:"title"`
 	Abstract        string `json:"abstract"`
 	CreateId        string `json:"createId"`
 	ParticipatingId string `json:"participatingId"`
+	CreateAt        int64  `json:"createAt"`
 }
 
 type ApprovalListResp struct {
