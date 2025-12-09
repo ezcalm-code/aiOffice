@@ -1,23 +1,23 @@
-package ..\aiOffice\doc\start
+package start
 
 import (
 	"github.com/gin-gonic/gin"
 
+	"aiOffice/internal/domain"
+	"aiOffice/internal/logic"
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/httpx"
-	"aiOffice/internal/logic"
-	"aiOffice/internal/domain"
 )
 
 type User struct {
-    svcCtx *svc.ServiceContext
-    user logic.User
+	svcCtx *svc.ServiceContext
+	user   logic.User
 }
 
 func NewUser(svcCtx *svc.ServiceContext, user logic.User) *User {
 	return &User{
-	    svcCtx: svcCtx,
-	    user:user,
+		svcCtx: svcCtx,
+		user:   user,
 	}
 }
 
@@ -34,7 +34,7 @@ func (h *User) InitRegister(engine *gin.Engine) {
 	g1.POST("/password", h.UpdatePassword)
 }
 
-// 用户登录 
+// 用户登录
 func (h *User) Login(ctx *gin.Context) {
 	var req domain.LoginReq
 	if err := httpx.BindAndValidate(ctx, &req); err != nil {
@@ -50,7 +50,7 @@ func (h *User) Login(ctx *gin.Context) {
 	}
 }
 
-// 获取用户信息 
+// 获取用户信息
 func (h *User) Info(ctx *gin.Context) {
 	var req domain.IdPathReq
 	if err := httpx.BindAndValidate(ctx, &req); err != nil {
@@ -66,7 +66,7 @@ func (h *User) Info(ctx *gin.Context) {
 	}
 }
 
-// 创建用户 
+// 创建用户
 func (h *User) Create(ctx *gin.Context) {
 	var req domain.User
 	if err := httpx.BindAndValidate(ctx, &req); err != nil {
@@ -82,7 +82,7 @@ func (h *User) Create(ctx *gin.Context) {
 	}
 }
 
-// 编辑用户 
+// 编辑用户
 func (h *User) Edit(ctx *gin.Context) {
 	var req domain.User
 	if err := httpx.BindAndValidate(ctx, &req); err != nil {
@@ -98,7 +98,7 @@ func (h *User) Edit(ctx *gin.Context) {
 	}
 }
 
-// 删除用户 
+// 删除用户
 func (h *User) Delete(ctx *gin.Context) {
 	var req domain.IdPathReq
 	if err := httpx.BindAndValidate(ctx, &req); err != nil {
@@ -114,7 +114,7 @@ func (h *User) Delete(ctx *gin.Context) {
 	}
 }
 
-// 用户列表 
+// 用户列表
 func (h *User) List(ctx *gin.Context) {
 	var req domain.UserListReq
 	if err := httpx.BindAndValidate(ctx, &req); err != nil {
@@ -130,7 +130,7 @@ func (h *User) List(ctx *gin.Context) {
 	}
 }
 
-// 修改密码 
+// 修改密码
 func (h *User) UpdatePassword(ctx *gin.Context) {
 	var req domain.UpdatePasswordReq
 	if err := httpx.BindAndValidate(ctx, &req); err != nil {
@@ -145,5 +145,3 @@ func (h *User) UpdatePassword(ctx *gin.Context) {
 		httpx.Ok(ctx)
 	}
 }
-
-

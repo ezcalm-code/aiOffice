@@ -1,0 +1,257 @@
+basePath: /
+definitions:
+  domain.LoginReq:
+    properties:
+      name:
+        description: 用户名
+        type: string
+      password:
+        description: 密码
+        type: string
+    type: object
+  domain.LoginResp:
+    properties:
+      accessExpire:
+        description: 过期时间
+        type: integer
+      id:
+        description: 用户ID
+        type: string
+      name:
+        description: 用户名
+        type: string
+      refreshAfter:
+        description: 刷新时间
+        type: integer
+      status:
+        description: 状态：0=失败 1=成功
+        type: integer
+      token:
+        description: JWT令牌
+        type: string
+    type: object
+  domain.UpdatePasswordReq:
+    properties:
+      id:
+        description: 用户ID
+        type: string
+      newPwd:
+        description: 新密码
+        type: string
+      oldPwd:
+        description: 原密码
+        type: string
+    type: object
+  domain.User:
+    properties:
+      id:
+        description: 用户ID
+        type: string
+      name:
+        description: 用户名
+        type: string
+      password:
+        description: 密码
+        type: string
+      status:
+        description: 状态：0=禁用 1=启用
+        type: integer
+    type: object
+  domain.UserListResp:
+    properties:
+      count:
+        description: 总记录数
+        type: integer
+      data:
+        description: 用户列表
+        items:
+          $ref: '#/definitions/domain.User'
+        type: array
+    type: object
+host: localhost:8001
+info:
+  contact:
+    email: your-email@example.com
+    name: wsj
+  description: AIOffice 接口文档
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: AIOffice API
+  version: "1.0"
+paths:
+  /v1/user:
+    post:
+      consumes:
+      - application/json
+      description: 新增用户
+      parameters:
+      - description: 用户信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+      security:
+      - Bearer: []
+      summary: 创建用户
+      tags:
+      - 用户模块
+    put:
+      consumes:
+      - application/json
+      description: 更新用户信息
+      parameters:
+      - description: 用户信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+      security:
+      - Bearer: []
+      summary: 编辑用户
+      tags:
+      - 用户模块
+  /v1/user/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定用户
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+      security:
+      - Bearer: []
+      summary: 删除用户
+      tags:
+      - 用户模块
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取用户
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户信息
+          schema:
+            $ref: '#/definitions/domain.User'
+      security:
+      - Bearer: []
+      summary: 获取用户信息
+      tags:
+      - 用户模块
+  /v1/user/list:
+    get:
+      consumes:
+      - application/json
+      description: 分页查询用户
+      parameters:
+      - collectionFormat: csv
+        description: 用户ID列表
+        in: query
+        items:
+          type: string
+        name: ids
+        type: array
+      - description: 用户名模糊搜索
+        in: query
+        name: name
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: count
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户列表
+          schema:
+            $ref: '#/definitions/domain.UserListResp'
+      security:
+      - Bearer: []
+      summary: 用户列表
+      tags:
+      - 用户模块
+  /v1/user/login:
+    post:
+      consumes:
+      - application/json
+      description: 验证用户名密码
+      parameters:
+      - description: 登录请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            $ref: '#/definitions/domain.LoginResp'
+      summary: 用户登录
+      tags:
+      - 用户模块
+  /v1/user/password:
+    post:
+      consumes:
+      - application/json
+      description: 更新用户密码
+      parameters:
+      - description: 修改密码请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdatePasswordReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 修改成功
+      security:
+      - Bearer: []
+      summary: 修改密码
+      tags:
+      - 用户模块
+securityDefinitions:
+  Bearer:
+    description: 'JWT token, format: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

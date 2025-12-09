@@ -2,47 +2,66 @@ package main
 
 import (
 	"flag"
+	"sync"
 
 	"aiOffice/internal/config"
-	"aiOffice/internal/handler/..\aiOffice\doc\start"
+	"aiOffice/internal/handler/start"
+	"aiOffice/internal/handler/ws"
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/conf"
 )
 
-type Serve interface {
-	Run() error
-}
+// @title AIOffice API
+// @version 1.0
+// @description AIOffice 接口文档
+// @termsOfService http://swagger.io/terms/
 
-const (
-	..\AiOffice\Doc\Start = "..\aiOffice\doc\start"
+// @contact.name wsj
+// @contact.email your-email@example.com
 
-	// add other module
-)
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8001
+// @BasePath /
+
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description JWT token, format: Bearer {token}
 
 var (
-    configFile = flag.String("f", "./etc/local/..\aioffice\doc\start.yaml", "the config file")
-    modeType   = flag.String("m", "..\aioffice\doc\start", "server run mod")
+	configFile = flag.String("f", "./etc/local/config.yaml", "the config file")
+	sw         sync.WaitGroup
 )
 
 func main() {
 	flag.Parse()
 
-    var cfg config.Config
+	var cfg config.Config
 	conf.MustLoad(*configFile, &cfg)
 
-    svc, err := svc.NewServiceContext(cfg)
-    if err != nil {
-        panic(err)
-    }
+	// 初始化唯一服务上下文
+	svcContext, err := svc.NewServiceContext(cfg)
+	if err != nil {
+		panic(err)
+	}
 
-	var srv Serve
-    switch *modeType {
-    case ..\AiOffice\Doc\Start:
-		srv = ..\aiOffice\doc\start.NewHandle(svc)
-    // add other module case
-    default:
-        panic("请指定正确的服务")
-    }
+	sw.Add(1)
+	// 运行http服务
+	go func() {
+		defer sw.Done()
+		srv := start.NewHandle(svcContext)
+		srv.Run()
+	}()
 
-	srv.Run()
+	sw.Add(1)
+	// 运行websocket服务
+	go func() {
+		defer sw.Done()
+		srv := ws.NewWs(*svcContext)
+		srv.Run()
+	}()
+
+	sw.Wait()
 }

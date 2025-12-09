@@ -1,11 +1,11 @@
-package ..\aiOffice\doc\start
+package start
 
 import (
 	"github.com/gin-gonic/gin"
 
-	"aiOffice/pkg/httpx"
-	"aiOffice/internal/svc"
 	"aiOffice/internal/handler"
+	"aiOffice/internal/svc"
+	"aiOffice/pkg/httpx"
 )
 
 type Handler interface {
@@ -26,7 +26,7 @@ func NewHandle(svc *svc.ServiceContext) *handle {
 		h.addr = svc.Config.Addr
 	}
 
-    httpx.SetErrorHandler(handler.ErrorHandler)
+	httpx.SetErrorHandler(handler.ErrorHandler)
 
 	handlers := initHandler(svc)
 	for _, handler := range handlers {

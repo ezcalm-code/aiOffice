@@ -52,3 +52,224 @@ type IdRespInfo struct {
 	Code int     `json:"code"`
 	Data *IdResp `json:"data"`
 }
+
+type Department struct {
+	Id         string        `json:"id, omitempty"`         // 部门ID
+	Name       string        `json:"name, omitempty"`       // 部门名称
+	ParentId   string        `json:"parentId, omitempty"`   // 父部门ID
+	ParentPath string        `json:"parentPath, omitempty"` // 父部门路径
+	Level      int           `json:"level, omitempty"`      // 部门层级
+	LeaderId   string        `json:"leaderId, omitempty"`   // 部门负责人ID
+	Leader     string        `json:"leader, omitempty"`     // 部门负责人姓名
+	Count      int64         `json:"count, omitempty"`      // 部门人数
+	Child      []*Department `json:"child, omitempty"`      // 子部门列表
+}
+
+type DepartmentUser struct {
+	Id       string `json:"id,omitempty"`       // 关联ID
+	UserId   string `json:"user,omitempty"`     // 用户ID
+	DepId    string `json:"dep,omitempty"`      // 部门ID
+	UserName string `json:"userName,omitempty"` // 用户姓名
+}
+
+type DepartmentListReq struct {
+	DepId  string   `json:"depId,omitempty"`  // 单个部门ID
+	DepIds []string `json:"depIds,omitempty"` // 多个部门ID列表
+}
+
+type DepartmentPathReq struct {
+	DepId  string `path:"depId,omitempty"`  // 部门ID路径参数
+	UserId string `path:"userId,omitempty"` // 用户ID路径参数
+}
+
+type SetDepartmentUser struct {
+	DepId   string   `json:"depId"`   // 部门ID
+	UserIds []string `json:"userIds"` // 用户ID列表
+}
+
+type AddDepartmentUser struct {
+	DepId  string `json:"depId"`  // 部门ID
+	UserId string `json:"userId"` // 要添加的用户ID
+}
+
+type RemoveDepartmentUser struct {
+	DepId  string `json:"depId"`  // 部门ID
+	UserId string `json:"userId"` // 要删除的用户ID
+}
+
+type DepartmentSoaResp struct {
+	Id       string            `json:"id, omitempty"`       // 部门ID
+	Name     string            `json:"name, omitempty"`     // 部门名称
+	ParentId string            `json:"parentId, omitempty"` // 父部门ID
+	Level    int               `json:"level, omitempty"`    // 部门层级
+	LeaderId string            `json:"leaderId, omitempty"` // 负责人ID
+	Leader   string            `json:"leader, omitempty"`   // 负责人姓名
+	Count    int64             `json:"count, omitempty"`    // 部门人数
+	Users    []*DepartmentUser `json:"users, omitempty"`    // 部门用户列表
+	Child    []*Department     `json:"child, omitempty"`    // 子部门列表
+}
+
+type TodoRecord struct {
+	TodoId   string `json:"todoId,omitempty"`
+	UserId   string `json:"userId,omitempty"`
+	UserName string `json:"userName,omitempty"`
+	Content  string `json:"content,omitempty"`
+	Image    string `json:"image,omitempty"`
+	CreateAt int64  `json:"createAt,omitempty"`
+}
+
+type Todo struct {
+	ID          string        `json:"id,omitempty"`
+	CreatorId   string        `json:"creatorId,omitempty"`
+	CreatorName string        `json:"creatorName,omitempty"`
+	Title       string        `json:"title,omitempty"`
+	DeadlineAt  int64         `json:"deadlineAt,omitempty"`
+	Desc        string        `json:"desc,omitempty"`
+	Status      int           `json:"status,omitempty"`
+	Records     []*TodoRecord `json:"records,omitempty"`
+	ExecuteIds  []string      `json:"executeIds,omitempty"` // 待办执行人
+	TodoStatus  int           `json:"todoStatus,omitempty"`
+}
+
+type UserTodo struct {
+	ID         string `json:"id,omitempty"`
+	UserId     string `json:"userId,omitempty"`
+	UserName   string `json:"userName,omitempty"`
+	TodoId     string `json:"todoId,omitempty"`
+	TodoStatus int    `json:"todoStatus,omitempty"` // 待办事项的状态
+}
+
+type TodoInfoResp struct {
+	ID          string        `json:"id,omitempty"`
+	CreatorId   string        `json:"creatorId,omitempty"`
+	CreatorName string        `json:"creatorName,omitempty"`
+	Title       string        `json:"title,omitempty"`
+	DeadlineAt  int64         `json:"deadlineAt,omitempty"`
+	Desc        string        `json:"desc,omitempty"`
+	Records     []*TodoRecord `json:"records,omitempty"`
+	ExecuteIds  []*UserTodo   `json:"executeIds,omitempty"`
+	Status      int           `json:"status,omitempty"`
+	TodoStatus  int           `json:"todoStatus,omitempty"`
+}
+
+type FinishedTodoReq struct {
+	UserId string `json:"userId"`
+	TodoId string `json:"todoId"`
+}
+
+type TodoListReq struct {
+	Id        string `json:"id,omitempty"`
+	UserId    string `json:"userId,omitempty"`
+	Page      int    `json:"page,omitempty"`
+	Count     int    `json:"count,omitempty"`
+	StartTime int64  `json:"startTime,omitempty"`
+	EndTime   int64  `json:"endTime,omitempty"`
+}
+
+type TodoListResp struct {
+	Count int64   `json:"count"`
+	List  []*Todo `json:"data"`
+}
+
+type Approver struct {
+	UserId   string `json:"userId"`
+	UserName string `json:"userName"`
+	Status   int    `json:"status"`
+	Reason   string `json:"reason,omitempty"` //请假原由
+}
+
+type MakeCard struct {
+	Date      int64  `json:"date,omitempty" mapstructure:"date,omitempty"`                   //补卡时间
+	Reason    string `json:"reason,omitempty" mapstructure:"reason,omitempty"`               //补卡理由
+	Day       int64  `json:"day,omitempty" mapstructure:"day,omitempty"`                     //补卡日期(20221011)
+	CheckType int    `json:"workCheckType,omitempty" mapstructure:"workCheckType,omitempty"` //补卡类型
+}
+
+type Leave struct {
+	Type      int     `json:"type,omitempty" mapstructure:"type,omitempty"`           //请假类型
+	StartTime int64   `json:"startTime,omitempty" mapstructure:"startTime,omitempty"` //开始时间
+	EndTime   int64   `json:"endTime,omitempty" mapstructure:"endTime,omitempty"`     //结束时间
+	Duration  float32 `json:"duration,omitempty" mapstructure:"duration,omitempty"`   //时长
+	Reason    string  `json:"reason,omitempty" mapstructure:"reason,omitempty"`       //请假原由
+	TimeType  int     `json:"timeType,omitempty" mapstructure:"timeType,omitempty"`   //请假类型  1=小时 2=天
+}
+
+type GoOut struct {
+	StartTime int64   `json:"startTime,omitempty" mapstructure:"omitempty"` //开始时间
+	EndTime   int64   `json:"endTime,omitempty" mapstructure:"omitempty"`   //结束时间
+	Duration  float32 `json:"duration,omitempty" mapstructure:"omitempty"`  //时长
+	Reason    string  `json:"reason,omitempty" mapstructure:"omitempty"`    //请假原由
+}
+
+type Approval struct {
+	Id          string    `json:"id,omitempty"`
+	UserId      string    `json:"userId,omitempty"`
+	No          string    `json:"no,omitempty"`
+	Type        int       `json:"type,omitempty"`
+	Status      int       `json:"status,omitempty"`
+	Title       string    `json:"title,omitempty"`
+	Abstract    string    `json:"abstract,omitempty"`
+	Reason      string    `json:"reason,omitempty"`
+	FinishAt    int64     `json:"finishAt,omitempty"`
+	FinishDay   int64     `json:"finishDay,omitempty"`
+	FinishMonth int64     `json:"finishMonth,omitempty"`
+	FinishYeas  int64     `json:"finishYeas,omitempty"`
+	MakeCard    *MakeCard `json:"makeCard,omitempty"`
+	Leave       *Leave    `json:"leave,omitempty"`
+	GoOut       *GoOut    `json:"goOut,omitempty"`
+	UpdateAt    int64     `json:"updateAt,omitempty"`
+	CreateAt    int64     `json:"createAt,omitempty"`
+}
+
+type ApprovalInfoResp struct {
+	Id          string      `json:"id"`
+	User        *Approver   `json:"user"`
+	No          string      `json:"no"`
+	Type        int         `json:"type"`
+	Status      int         `json:"status"`
+	Title       string      `json:"title"`
+	Abstract    string      `json:"abstract"`
+	Reason      string      `json:"reason"`
+	Approver    *Approver   `json:"approver"`
+	Approvers   []*Approver `json:"approvers"`
+	CopyPersons []*Approver `json:"copyPersons"`
+	FinishAt    int64       `json:"finishAt"`
+	FinishDay   int64       `json:"finishDay"`
+	FinishMonth int64       `json:"finishMonth"`
+	FinishYeas  int64       `json:"finishYeas"`
+	MakeCard    *MakeCard   `json:"makeCard"`
+	Leave       *Leave      `json:"leave"`
+	GoOut       *GoOut      `json:"goOut"`
+	UpdateAt    int64       `json:"updateAt"`
+	CreateAt    int64       `json:"createAt"`
+}
+
+type DisposeReq struct {
+	Status     int
+	Reason     string
+	ApprovalId string
+}
+
+type ApprovalListReq struct {
+	UserId string `json:"userId,omitempty" form:"userId"`
+	Type   int    `json:"type,omitempty" form:"type"`
+	Page   int    `json:"page,omitempty" form:"page"`
+	Count  int    `json:"count,omitempty" form:"count"`
+}
+
+type ApprovalList struct {
+	Id              string `json:"id"`
+	No              string `json:"no"`
+	Type            int    `json:"type"`
+	Status          int    `json:"status"`
+	Title           string `json:"title"`
+	Abstract        string `json:"abstract"`
+	CreateId        string `json:"createId"`
+	ParticipatingId string `json:"participatingId"`
+	CreateAt        int64  `json:"createAt"`
+}
+
+type ApprovalListResp struct {
+	Count int64           `json:"count"`
+	List  []*ApprovalList `json:"data"`
+}

@@ -1,0 +1,24 @@
+#程序配置
+Name: AIOffice
+Addr: 0.0.0.0:8001
+
+#websocket配置
+Ws:
+  Addr: 0.0.0.0:9001
+
+#Mongo配置
+Mongo:
+  User: ""
+  Password: ""
+  Host: ["127.0.0.1"]
+  Port: 27017
+  Database: "aioffice"
+
+Jwt:
+  Secret: "jwtnb666"
+  Expire: 8640000 #100天
+
+#链路追踪
+Tlog:
+  Mode: 1 # 0=关闭 1=全部 2=Info及以上 3=Warn及以上 4=仅Err 
+  Label: "aioffice" # 日志标签 标记来源
