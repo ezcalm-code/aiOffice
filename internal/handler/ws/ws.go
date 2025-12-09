@@ -1,6 +1,9 @@
 package ws
 
 import (
+	"aiOffice/internal/domain"
+	"aiOffice/internal/logic"
+	"aiOffice/internal/model"
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/token"
 	"context"
@@ -22,11 +25,28 @@ type Ws struct {
 
 	sync.RWMutex
 	tokenparse *token.Parse
+	chat       logic.Chat
 }
 
-func NewWs(svc svc.ServiceContext) *Ws {
+func NewWs(svc *svc.ServiceContext) *Ws {
+	// 初始化日志
+	tlog.Init(
+		tlog.WithLoggerWriter(tlog.NewLoggerWriter()),
+		tlog.WithLabel(svc.Config.Tlog.Label),
+		tlog.WithMode(svc.Config.Tlog.Mode),
+	)
+
 	return &Ws{
-		svc: &svc,
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
+		svc:        svc,
+		chat:       logic.NewChat(svc),
+		tokenparse: token.NewTokenParse(svc.Config.Jwt.Secret),
+		uidToConn:  map[string]*websocket.Conn{},
+		connToUid:  map[*websocket.Conn]string{},
 	}
 }
 
@@ -51,7 +71,7 @@ func (ws *Ws) ServeWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ws.addConn(conn, uid)
-	go ws.HandleConn(c, uid, token)
+	go ws.HandleConn(conn, uid, token)
 }
 
 func (ws *Ws) HandleConn(conn *websocket.Conn, uid string, token string) {
@@ -60,6 +80,25 @@ func (ws *Ws) HandleConn(conn *websocket.Conn, uid string, token string) {
 		if err != nil {
 			tlog.Errorf("serverWs", "conn.ReadMessage fail %v, uid:%v", err.Error(), uid)
 			ws.closeConn(conn)
+			return
+		}
+
+		ctx := ws.context(uid, token)
+		var req domain.Message
+		if err := json.Unmarshal(msg, &req); err != nil {
+			tlog.ErrorfCtx(ctx, "HandleConn", "Unmarshal fail: %v", err.Error())
+			return
+		}
+		req.SendId = uid
+		switch model.ChatType(req.ChatType) {
+		case model.SingleChatType:
+			err = ws.privateChat(ctx, conn, &req)
+		case model.GroupChatType:
+			err = ws.groupChat(ctx, conn, &req)
+		}
+		// 处理消息发送过程中的错误
+		if err != nil {
+			tlog.ErrorfCtx(ctx, "handlerConn", "message handle fail %v, msg %v", err.Error(), req)
 			return
 		}
 	}
@@ -140,4 +179,10 @@ func (ws *Ws) auth(r *http.Request) (uid string, tokenStr string, err error) {
 		return "", "", err
 	}
 	return claim[token.Identify].(string), tokenStr, nil
+}
+
+func (ws *Ws) context(uid, tok string) context.Context {
+	ctx := context.WithValue(context.Background(), token.Identify, uid)
+	ctx = context.WithValue(ctx, token.Authorization, tok)
+	return tlog.TraceStart(ctx)
 }
