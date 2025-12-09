@@ -45,8 +45,8 @@ func NewWs(svc *svc.ServiceContext) *Ws {
 		svc:        svc,
 		chat:       logic.NewChat(svc),
 		tokenparse: token.NewTokenParse(svc.Config.Jwt.Secret),
-		uidToConn:  map[string]*websocket.Conn{},
-		connToUid:  map[*websocket.Conn]string{},
+		uidToConn:  make(map[string]*websocket.Conn), // 初始化用户ID到连接的映射
+		connToUid:  make(map[*websocket.Conn]string), // 初始化连接到用户ID的映射
 	}
 }
 
@@ -58,8 +58,8 @@ func (ws *Ws) ServeWs(w http.ResponseWriter, r *http.Request) {
 	}()
 	// 鉴权
 	uid, token, err := ws.auth(r)
-	if err := recover(); err != nil {
-		tlog.ErrorfCtx(r.Context(), "serverWs", "auth fail %v", err)
+	if err != nil {
+		tlog.ErrorfCtx(r.Context(), "serverWs", "auth fail %v", err.Error())
 		return
 	}
 	respHeader := http.Header{
@@ -170,7 +170,7 @@ func (ws *Ws) SendByUids(ctx context.Context, msg interface{}, uids ...string) e
 }
 
 func (ws *Ws) auth(r *http.Request) (uid string, tokenStr string, err error) {
-	tok := r.Header.Get("sec-websocket-protocol")
+	tok := r.Header.Get("websocket")
 	if tok == "" {
 		return "", "", errors.New("未登录")
 	}
