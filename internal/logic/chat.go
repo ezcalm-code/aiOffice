@@ -24,7 +24,9 @@ type chat struct {
 
 func NewChat(svc *svc.ServiceContext) Chat {
 
-	return &chat{}
+	return &chat{
+		svc: svc,
+	}
 }
 
 // PrivateChat 处理私聊消息，将消息保存到数据库

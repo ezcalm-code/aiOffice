@@ -155,6 +155,7 @@ func (ws *Ws) SendByUids(ctx context.Context, msg interface{}, uids ...string) e
 				return err
 			}
 		}
+		return nil
 	}
 	for _, uid := range uids {
 		conn, ok := ws.uidToConn[uid]
