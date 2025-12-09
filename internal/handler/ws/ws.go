@@ -150,7 +150,7 @@ func (ws *Ws) SendByUids(ctx context.Context, msg interface{}, uids ...string) e
 
 	if len(uids) == 0 {
 		for i, _ := range ws.uidToConn {
-			if err := ws.SendByConn(ctx, ws.uidToConn[i]); err != nil {
+			if err := ws.SendByConn(ctx, ws.uidToConn[i], msg); err != nil {
 				tlog.ErrorCtx(ctx, "ws.sendByUids", err.Error())
 				return err
 			}

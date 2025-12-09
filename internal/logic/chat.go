@@ -17,9 +17,9 @@ type Chat interface {
 }
 
 type chat struct {
-	svc    *svc.ServiceContext
-	router *router.Router
-	memory schema.Memory
+	svc *svc.ServiceContext
+	// router *router.Router
+	// memory schema.Memory
 }
 
 func NewChat(svc *svc.ServiceContext) Chat {
