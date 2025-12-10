@@ -22,3 +22,8 @@ Jwt:
 Tlog:
   Mode: 1 # 0=关闭 1=全部 2=Info及以上 3=Warn及以上 4=仅Err 
   Label: "aioffice" # 日志标签 标记来源
+
+#LangChain
+LangChain:
+  Url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  ApiKey: 

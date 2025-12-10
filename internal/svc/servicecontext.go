@@ -8,6 +8,8 @@ import (
 	"aiOffice/pkg/mongoutils"
 	"context"
 
+	"github.com/tmc/langchaingo/callbacks"
+	"github.com/tmc/langchaingo/llms/openai"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -25,6 +27,8 @@ type ServiceContext struct {
 	ApprovalModel       model.ApprovalModel
 	ChatLogModel        model.ChatLogModel
 	Jwt                 *middleware.Jwt
+	LLM                 *openai.LLM
+	cb                  callbacks.Handler
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -36,6 +40,17 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		Port:     c.Mongo.Port,
 		Database: c.Mongo.Database,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	options := []openai.Option{
+		openai.WithBaseURL(c.LangChain.Url),
+		openai.WithToken(c.LangChain.ApiKey),
+		openai.WithEmbeddingModel("text-embedding-v3"),
+		openai.WithModel("qwen3-max"),
+	}
+	llm, err := openai.New(options...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +67,8 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		ApprovalModel:       model.NewApprovalModel(mongoDB),
 		ChatLogModel:        model.NewChatLogModel(mongoDB),
 		Jwt:                 middleware.NewJwt(c.Jwt.Secret),
+		LLM:                 llm,
+		// cb:                  callbacks,
 	}
 
 	return svc, initAdminUser(svc)
