@@ -5,9 +5,11 @@ import (
 	"aiOffice/internal/middleware"
 	"aiOffice/internal/model"
 	"aiOffice/pkg/encrypt"
+	"aiOffice/pkg/langchain/callbackx"
 	"aiOffice/pkg/mongoutils"
 	"context"
 
+	"gitee.com/dn-jinmin/tlog"
 	"github.com/tmc/langchaingo/callbacks"
 	"github.com/tmc/langchaingo/llms/openai"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -44,9 +46,17 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		return nil, err
 	}
 
+	log := tlog.NewLogger()
+	callbacks := callbacks.CombiningHandler{
+		Callbacks: []callbacks.Handler{
+			callbackx.NewLogHandler(log),
+		},
+	}
+
 	options := []openai.Option{
 		openai.WithBaseURL(c.LangChain.Url),
 		openai.WithToken(c.LangChain.ApiKey),
+		openai.WithCallback(callbacks),
 		openai.WithEmbeddingModel("text-embedding-v3"),
 		openai.WithModel("qwen3-max"),
 	}
@@ -68,7 +78,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		ChatLogModel:        model.NewChatLogModel(mongoDB),
 		Jwt:                 middleware.NewJwt(c.Jwt.Secret),
 		LLM:                 llm,
-		// cb:                  callbacks,
+		cb:                  callbacks,
 	}
 
 	return svc, initAdminUser(svc)
