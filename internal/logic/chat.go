@@ -9,11 +9,15 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"sort"
+
+	"github.com/tmc/langchaingo/chains"
+	"github.com/tmc/langchaingo/prompts"
 )
 
 type Chat interface {
 	PrivateChat(ctx context.Context, req *domain.Message) error
 	GroupChat(ctx context.Context, req *domain.Message) (uids []string, err error)
+	AIChat(ctx context.Context, req *domain.ChatReq) (string, error)
 }
 
 type chat struct {
@@ -48,6 +52,25 @@ func (l *chat) GroupChat(ctx context.Context, req *domain.Message) (uids []strin
 
 	// 返回空的用户ID列表（当前实现不需要返回特定用户列表）
 	return nil, err
+}
+
+func (l *chat) AIChat(ctx context.Context, req *domain.ChatReq) (output string, err error) {
+	input := req.Prompts
+	// 1.定义提示词模板
+	prompt := prompts.NewPromptTemplate(
+		"你是一个乐于助人的ai助手，请回答{{.input}}",
+		[]string{"input"},
+	)
+	// 2.创建llm chain
+	chain := chains.NewLLMChain(l.svc.LLM, prompt)
+	// 3.调用chain
+	res, err := chains.Call(ctx, chain, map[string]any{
+		"input": input,
+	})
+	if err != nil {
+		return "", err
+	}
+	return res["text"].(string), err
 }
 
 // chatlog 通用的聊天消息保存方法，将消息记录到数据库
