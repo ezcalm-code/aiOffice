@@ -59,7 +59,7 @@ func main() {
 	// 运行websocket服务
 	go func() {
 		defer sw.Done()
-		srv := ws.NewWs(*svcContext)
+		srv := ws.NewWs(svcContext)
 		srv.Run()
 	}()
 

@@ -5,6 +5,7 @@ import "common.api"
 import "department.api"
 import "todo.api"
 import "approval.api"
+import "chat.api"
 
 info(
     tittle: "aiOffice"

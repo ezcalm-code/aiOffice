@@ -251,10 +251,10 @@ type DisposeReq struct {
 }
 
 type ApprovalListReq struct {
-	UserId string `json:"userId,omitempty" form:"userId"`
-	Type   int    `json:"type,omitempty" form:"type"`
-	Page   int    `json:"page,omitempty" form:"page"`
-	Count  int    `json:"count,omitempty" form:"count"`
+	UserId string `json:"userId,omitempty"`
+	Type   int    `json:"type,omitempty"`
+	Page   int    `json:"page,omitempty"`
+	Count  int    `json:"count,omitempty"`
 }
 
 type ApprovalList struct {
@@ -272,4 +272,15 @@ type ApprovalList struct {
 type ApprovalListResp struct {
 	Count int64           `json:"count"`
 	List  []*ApprovalList `json:"data"`
+}
+
+type ChatReq struct {
+	Prompts    string `json:"prompts,omitempty"`
+	ChatType   int    `json:"chatType,omitempty"`
+	RelationId int    `json:"relationId,omitempty"`
+}
+
+type ChatResp struct {
+	ChatType int         `json:"chatType,omitempty"`
+	Data     interface{} `json:"data"`
 }

@@ -38,4 +38,8 @@ type Config struct {
 	Ws struct {
 		Addr string
 	}
+	LangChain struct {
+		Url    string
+		ApiKey string
+	}
 }

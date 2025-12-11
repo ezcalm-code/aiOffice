@@ -1,0 +1,31 @@
+syntax="v1"
+
+info(
+    tittle: "聊天模块"
+    author: "wsj"
+)
+
+type (
+    ChatReq {
+        Prompts         string  `json:"prompts,omitempty"`
+        ChatType        int     `json:"chatType,omitempty"`
+        RelationId      int     `json:"relationId,omitempty"`
+    }
+    ChatResp {
+        ChatType        int             `json:"chatType,omitempty"`
+        Data            interface{}     `json:"data"`
+    }
+)
+
+@server(
+    group: v1/chat
+    logic:Chat
+    middleware:Jwt
+)
+service chat {
+    @server(
+        handler: Chat
+        logic:Chat.AIChat
+    )
+    post /(ChatReq)returns(ChatResp)
+}
