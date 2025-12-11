@@ -49,7 +49,7 @@ func NewChat(svc *svc.ServiceContext) Chat {
 	})
 
 	// 3.创建router
-	r := router.NewRouter(svc.LLM, handlers)
+	r := router.NewRouter(svc.LLM, handlers, m)
 
 	return &chat{
 		svc:    svc,

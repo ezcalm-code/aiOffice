@@ -67,18 +67,17 @@ func (s *Memoryx) memory(ctx context.Context) schema.Memory {
 	s.Lock() // 加锁保证并发安全
 	defer s.Unlock()
 
-	var chatId string
 	v := ctx.Value(langchain.ChatId) // 从上下文中获取聊天会话ID
 	if v == nil {
 		return s.defaultMemory // 如果没有会话ID，返回默认内存实例
 	}
 
-	chatId = v.(string)
-	memory, ok := s.memorys[chatId] // 查找该会话ID对应的内存实例
+	chatId := v.(string)
+	mem, ok := s.memorys[chatId] // 查找该会话ID对应的内存实例
 	if !ok {
-		memory = s.GetMemory(chatId) // 如果不存在，创建新的内存实例
-		s.memorys[chatId] = memory   // 将新实例存储到映射中
+		mem = s.createMemory() // 接创建，不调用GetMemory避免死锁
+		s.memorys[chatId] = mem
 	}
 
-	return memory
+	return mem
 }

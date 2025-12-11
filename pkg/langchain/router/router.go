@@ -9,7 +9,6 @@ import (
 
 	"github.com/tmc/langchaingo/chains"
 	"github.com/tmc/langchaingo/llms"
-	"github.com/tmc/langchaingo/memory"
 	"github.com/tmc/langchaingo/prompts"
 	"github.com/tmc/langchaingo/schema"
 )
@@ -22,7 +21,7 @@ type Router struct {
 	emptyHandle  handler.Handler // 默认处理器，当没有合适处理器时使用
 }
 
-func NewRouter(llm llms.Model, handlers []handler.Handler) *Router {
+func NewRouter(llm llms.Model, handlers []handler.Handler, mem schema.Memory) *Router {
 
 	hs := make(map[string]handler.Handler)
 	for _, v := range handlers {
@@ -49,7 +48,7 @@ func NewRouter(llm llms.Model, handlers []handler.Handler) *Router {
 		handlers:     hs,
 		handlerNames: handlerNames,
 		chain:        chains.NewLLMChain(llm, prompt),
-		memory:       memory.NewSimple(),
+		memory:       mem,
 	}
 }
 
