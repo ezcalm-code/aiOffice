@@ -12,4 +12,5 @@ var (
 	ErrNotFindUser       = errors.New("找不到该用户")
 	ErrNotFindDepartment = errors.New("找不到该部门")
 	ErrTodoNotFound      = errors.New("待办事项不存在")
+	ErrNotHandles        = errors.New("没有合适的处理器")
 )
