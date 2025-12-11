@@ -14,10 +14,17 @@ type DefaultHandler struct {
 }
 
 func NewDefaultHandler(svc *svc.ServiceContext) *DefaultHandler {
-	template := "you are an all-round assistant, please help me answer this question: {{.input}}"
+	template := `你是一个全能助手，请根据对话历史和用户问题进行回答。
+
+对话历史:
+{{.history}}
+
+用户问题: {{.input}}
+
+请用中文回答:`
 	prompt := prompts.PromptTemplate{
 		Template:       template,
-		InputVariables: []string{langchain.Input},
+		InputVariables: []string{langchain.Input, "history"},
 		TemplateFormat: prompts.TemplateFormatGoTemplate,
 		PartialVariables: map[string]any{
 			"chatType": fmt.Sprintf("%d", langchain.DefaultHandler),
