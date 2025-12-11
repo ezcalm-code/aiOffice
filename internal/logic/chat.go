@@ -1,35 +1,60 @@
 package logic
 
 import (
-	"aiOffice/internal/domain"
-	"aiOffice/internal/model"
-	"aiOffice/internal/svc"
-	"aiOffice/pkg/timeutils"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"sort"
+	"strings"
+
+	"aiOffice/internal/domain"
+	chatinternal "aiOffice/internal/logic/chatinternal/handler"
+	"aiOffice/internal/model"
+	"aiOffice/internal/svc"
+	"aiOffice/pkg/langchain"
+	langhandler "aiOffice/pkg/langchain/handler"
+	"aiOffice/pkg/langchain/memoryx"
+	"aiOffice/pkg/langchain/router"
+	"aiOffice/pkg/timeutils"
+	"aiOffice/pkg/token"
 
 	"github.com/tmc/langchaingo/chains"
-	"github.com/tmc/langchaingo/prompts"
+	"github.com/tmc/langchaingo/memory"
+	"github.com/tmc/langchaingo/schema"
 )
 
 type Chat interface {
 	PrivateChat(ctx context.Context, req *domain.Message) error
 	GroupChat(ctx context.Context, req *domain.Message) (uids []string, err error)
-	AIChat(ctx context.Context, req *domain.ChatReq) (string, error)
+	AIChat(ctx context.Context, req *domain.ChatReq) (*domain.ChatResp, error)
 }
 
 type chat struct {
-	svc *svc.ServiceContext
-	// router *router.Router
-	// memory schema.Memory
+	svc    *svc.ServiceContext
+	router *router.Router
+	memory schema.Memory
 }
 
 func NewChat(svc *svc.ServiceContext) Chat {
+	// 1.创建handler
+	handlers := []langhandler.Handler{
+		chatinternal.NewDefaultHandler(svc),
+		chatinternal.NewTodoHandler(svc),
+	}
+
+	// 2.创建memory
+	m := memoryx.NewMemoryx(func() schema.Memory {
+		return memory.NewConversationBuffer()
+	})
+
+	// 3.创建router
+	r := router.NewRouter(svc.LLM, handlers)
 
 	return &chat{
-		svc: svc,
+		svc:    svc,
+		memory: m,
+		router: r,
 	}
 }
 
@@ -54,23 +79,63 @@ func (l *chat) GroupChat(ctx context.Context, req *domain.Message) (uids []strin
 	return nil, err
 }
 
-func (l *chat) AIChat(ctx context.Context, req *domain.ChatReq) (output string, err error) {
-	input := req.Prompts
-	// 1.定义提示词模板
-	prompt := prompts.NewPromptTemplate(
-		"你是一个乐于助人的ai助手，请回答{{.input}}",
-		[]string{"input"},
-	)
-	// 2.创建llm chain
-	chain := chains.NewLLMChain(l.svc.LLM, prompt)
-	// 3.调用chain
-	res, err := chains.Call(ctx, chain, map[string]any{
-		"input": input,
-	})
+func (l *chat) AIChat(ctx context.Context, req *domain.ChatReq) (resp *domain.ChatResp, err error) {
+	uid := token.GetUid(ctx)
+	ctx = context.WithValue(ctx, langchain.ChatId, uid)
+
+	// if req.ChatType > 0 {
+	// 	return l.basicService(ctx, req)
+	// }
+	return l.aiService(ctx, req)
+}
+
+func (l *chat) aiService(ctx context.Context, req *domain.ChatReq) (output *domain.ChatResp, err error) {
+	// 将chatlog相关参数通过context传递,避免影响memory的保存逻辑
+	ctx = context.WithValue(ctx, "relationId", req.RelationId)
+	// ctx = context.WithValue(ctx, "startTime", req.StartTime)
+	// ctx = context.WithValue(ctx, "endTime", req.EndTime)
+	v, err := chains.Call(ctx, l.router, map[string]any{
+		langchain.Input: req.Prompts,
+	}, chains.WithCallback(l.svc.Cb))
 	if err != nil {
-		return "", err
+		// 特殊处理：如果是agent输出解析错误，尝试从错误消息中提取有用信息
+		if strings.Contains(err.Error(), "unable to parse agent output") {
+			// 提取错误消息中的实际内容，通常在冒号后面
+			parts := strings.Split(err.Error(), ": ")
+			if len(parts) > 1 {
+				content := parts[len(parts)-1]
+				// 返回提取到的内容
+				return &domain.ChatResp{
+					ChatType: domain.DefaultHandler,
+					Data:     content,
+				}, nil
+			}
+		}
+		return nil, err
 	}
-	return res["text"].(string), err
+
+	// 检查输出类型并处理非字符串输出
+	var data string
+	if _, ok := v[langchain.Output].(string); !ok {
+		// 如果输出不是字符串，直接返回原始数据
+		return &domain.ChatResp{
+			ChatType: domain.DefaultHandler,
+			Data:     v,
+		}, nil
+	}
+	data = v[langchain.Output].(string)
+
+	// 尝试解析AI输出为结构化响应格式: {"chatType": "", data: ""}
+	var res domain.ChatResp
+	if err := json.Unmarshal([]byte(data), &res); err != nil {
+		// 解析失败时返回默认处理器类型和原始数据
+		return &domain.ChatResp{
+			ChatType: domain.DefaultHandler,
+			Data:     data,
+		}, nil
+	}
+
+	return &res, nil
 }
 
 // chatlog 通用的聊天消息保存方法，将消息记录到数据库

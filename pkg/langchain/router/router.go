@@ -8,6 +8,7 @@ import (
 	"github.com/tmc/langchaingo/chains"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/prompts"
+	"github.com/tmc/langchaingo/schema"
 )
 
 type Router struct {
@@ -46,4 +47,19 @@ func (r *Router) Call(ctx context.Context, inputs map[string]any, opts ...chains
 		return nil, errors.New("没有合适的处理器")
 	}
 	return chains.Call(ctx, handler.Chains(), inputs)
+}
+
+// GetMemory 实现chains.Chain接口
+func (r *Router) GetMemory() schema.Memory {
+	return nil
+}
+
+// GetInputKeys 实现chains.Chain接口
+func (r *Router) GetInputKeys() []string {
+	return []string{"input"}
+}
+
+// GetOutputKeys 实现chains.Chain接口
+func (r *Router) GetOutputKeys() []string {
+	return []string{"text"}
 }

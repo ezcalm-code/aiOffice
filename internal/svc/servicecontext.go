@@ -30,7 +30,7 @@ type ServiceContext struct {
 	ChatLogModel        model.ChatLogModel
 	Jwt                 *middleware.Jwt
 	LLM                 *openai.LLM
-	cb                  callbacks.Handler
+	Cb                  callbacks.Handler
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -78,7 +78,7 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		ChatLogModel:        model.NewChatLogModel(mongoDB),
 		Jwt:                 middleware.NewJwt(c.Jwt.Secret),
 		LLM:                 llm,
-		cb:                  callbacks,
+		Cb:                  callbacks,
 	}
 
 	return svc, initAdminUser(svc)

@@ -13,7 +13,7 @@ type DefaultHandler struct {
 	chain chains.Chain
 }
 
-func NewDefaultHandler(svc svc.ServiceContext) *DefaultHandler {
+func NewDefaultHandler(svc *svc.ServiceContext) *DefaultHandler {
 	template := "you are an all-round assistant, please help me answer this question: {{.input}}"
 	prompt := prompts.PromptTemplate{
 		Template:       template,
@@ -37,6 +37,6 @@ func (d *DefaultHandler) Description() string {
 	return "suitable for answering multiple questions"
 }
 
-func (d *DefaultHandler) Chains() string {
-	return d.Chains()
+func (d *DefaultHandler) Chains() chains.Chain {
+	return d.chain
 }
