@@ -4,7 +4,8 @@ import (
 	"aiOffice/internal/model"
 	"aiOffice/pkg/langchain/handler"
 	"context"
-	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/tmc/langchaingo/chains"
 	"github.com/tmc/langchaingo/llms"
@@ -72,14 +73,22 @@ func (r *Router) Call(ctx context.Context, inputs map[string]any, opts ...chains
 	}
 
 	// 2. 解析LLM输出，获取目标Handler名称
-	handlerName := result["text"].(string)
+	handlerName := strings.TrimSpace(result["text"].(string))
+	handlerName = strings.ToLower(handlerName)
+
+	fmt.Printf("[Router] LLM选择的handler: %q\n", handlerName)
 
 	// 3. 调用对应的Handler
-	handler, ok := r.handlers[handlerName]
+	h, ok := r.handlers[handlerName]
 	if !ok {
-		return nil, errors.New("没有合适的处理器")
+		// 如果找不到匹配的handler，使用default handler
+		fmt.Printf("[Router] 未找到handler %q，使用default\n", handlerName)
+		h, ok = r.handlers["default"]
+		if !ok {
+			return nil, model.ErrNotHandles
+		}
 	}
-	return chains.Call(ctx, handler.Chains(), inputs)
+	return chains.Call(ctx, h.Chains(), inputs)
 }
 
 // GetMemory 实现chains.Chain接口
