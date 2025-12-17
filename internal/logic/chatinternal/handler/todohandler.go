@@ -1,6 +1,7 @@
 package chatinternal
 
 import (
+	"aiOffice/internal/logic/chatinternal/toolx"
 	"aiOffice/internal/svc"
 
 	"github.com/tmc/langchaingo/chains"
@@ -12,8 +13,14 @@ type TodoHandler struct {
 }
 
 func NewTodoHandler(svc *svc.ServiceContext) *TodoHandler {
+	// 创建待办工具
+	todoTools := []tools.Tool{
+		toolx.NewTodoTool(svc),      // 创建待办
+		toolx.NewTodoQueryTool(svc), // 查询待办
+	}
+
 	return &TodoHandler{
-		basechat: NewBaseChat(svc, []tools.Tool{}),
+		basechat: NewBaseChat(svc, todoTools),
 	}
 }
 
@@ -26,5 +33,5 @@ func (t *TodoHandler) Description() string {
 }
 
 func (t *TodoHandler) Chains() chains.Chain {
-	return t.agentsChain
+	return t.basechat.Chains()
 }

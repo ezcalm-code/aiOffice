@@ -60,3 +60,4 @@ ___go_build_*
 upload/
 /volumes/
 *.sh
+/uploadFile/

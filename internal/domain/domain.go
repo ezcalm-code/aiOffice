@@ -284,3 +284,13 @@ type ChatResp struct {
 	ChatType int         `json:"chatType,omitempty"`
 	Data     interface{} `json:"data"`
 }
+
+type FileResp struct {
+	Host     string `json:"host"`     // 文件访问主机地址
+	File     string `json:"file"`     // 文件相对路径
+	Filename string `json:"filename"` // 文件名称
+}
+
+type FileListResp struct {
+	List []*FileResp `json:"list"` // 文件列表
+}

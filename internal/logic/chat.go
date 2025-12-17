@@ -28,6 +28,7 @@ type Chat interface {
 	PrivateChat(ctx context.Context, req *domain.Message) error
 	GroupChat(ctx context.Context, req *domain.Message) (uids []string, err error)
 	AIChat(ctx context.Context, req *domain.ChatReq) (*domain.ChatResp, error)
+	File(ctx context.Context, files []*domain.FileResp) error
 }
 
 type chat struct {
@@ -41,6 +42,7 @@ func NewChat(svc *svc.ServiceContext) Chat {
 	handlers := []langhandler.Handler{
 		chatinternal.NewDefaultHandler(svc),
 		chatinternal.NewTodoHandler(svc),
+		chatinternal.NewApprovalHandler(svc),
 	}
 
 	// 2.创建memory
@@ -98,10 +100,11 @@ func (l *chat) aiService(ctx context.Context, req *domain.ChatReq) (output *doma
 		langchain.Input: req.Prompts,
 	}, chains.WithCallback(l.svc.Cb))
 	if err != nil {
+		errMsg := err.Error()
 		// 特殊处理：如果是agent输出解析错误，尝试从错误消息中提取有用信息
-		if strings.Contains(err.Error(), "unable to parse agent output") {
+		if strings.Contains(errMsg, "unable to parse agent output") {
 			// 提取错误消息中的实际内容，通常在冒号后面
-			parts := strings.Split(err.Error(), ": ")
+			parts := strings.Split(errMsg, ": ")
 			if len(parts) > 1 {
 				content := parts[len(parts)-1]
 				// 返回提取到的内容
@@ -110,6 +113,20 @@ func (l *chat) aiService(ctx context.Context, req *domain.ChatReq) (output *doma
 					Data:     content,
 				}, nil
 			}
+		}
+		// 处理missing key错误 - 说明工具执行成功但agent没有返回Final Answer
+		if strings.Contains(errMsg, "missing key in output values") {
+			// 尝试从context获取工具执行结果
+			if toolResult, ok := ctx.Value("toolResult").(string); ok && toolResult != "" {
+				return &domain.ChatResp{
+					ChatType: domain.TodoFind,
+					Data:     toolResult,
+				}, nil
+			}
+			return &domain.ChatResp{
+				ChatType: domain.TodoAdd,
+				Data:     "操作已完成",
+			}, nil
 		}
 		return nil, err
 	}
@@ -183,4 +200,35 @@ func GenerateUniqueID(id1, id2 string) string {
 
 	// 返回哈希值的十六进制字符串表示
 	return base64.RawStdEncoding.EncodeToString(hash)[:22] // 可以选择更短的长度
+}
+
+// File 将上传的文件信息保存到记忆机制中，使AI能够记住用户上传的文件
+func (l *chat) File(ctx context.Context, files []*domain.FileResp) error {
+	uid := token.GetUid(ctx)
+	ctx = context.WithValue(ctx, langchain.ChatId, uid)
+
+	// 构建文件信息列表
+	data := make([]*domain.ChatFile, 0, len(files))
+	for _, file := range files {
+		data = append(data, &domain.ChatFile{
+			Path: file.File,
+			Name: file.Filename,
+			Time: timeutils.NowTime(),
+		})
+	}
+
+	// 将文件信息序列化为JSON
+	b, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	// 将文件信息保存到记忆机制中
+	err = l.memory.SaveContext(ctx, map[string]any{
+		langchain.Output: string(b),
+	}, map[string]any{
+		langchain.Output: "uploaded files",
+	})
+
+	return err
 }
