@@ -114,6 +114,13 @@ func (l *chat) aiService(ctx context.Context, req *domain.ChatReq) (output *doma
 		}
 		// 处理missing key错误 - 说明工具执行成功但agent没有返回Final Answer
 		if strings.Contains(errMsg, "missing key in output values") {
+			// 尝试从context获取工具执行结果
+			if toolResult, ok := ctx.Value("toolResult").(string); ok && toolResult != "" {
+				return &domain.ChatResp{
+					ChatType: domain.TodoFind,
+					Data:     toolResult,
+				}, nil
+			}
 			return &domain.ChatResp{
 				ChatType: domain.TodoAdd,
 				Data:     "操作已完成",
