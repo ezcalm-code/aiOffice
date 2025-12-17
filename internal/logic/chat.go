@@ -28,6 +28,7 @@ type Chat interface {
 	PrivateChat(ctx context.Context, req *domain.Message) error
 	GroupChat(ctx context.Context, req *domain.Message) (uids []string, err error)
 	AIChat(ctx context.Context, req *domain.ChatReq) (*domain.ChatResp, error)
+	File(ctx context.Context, files []*domain.FileResp) error
 }
 
 type chat struct {
@@ -199,4 +200,35 @@ func GenerateUniqueID(id1, id2 string) string {
 
 	// 返回哈希值的十六进制字符串表示
 	return base64.RawStdEncoding.EncodeToString(hash)[:22] // 可以选择更短的长度
+}
+
+// File 将上传的文件信息保存到记忆机制中，使AI能够记住用户上传的文件
+func (l *chat) File(ctx context.Context, files []*domain.FileResp) error {
+	uid := token.GetUid(ctx)
+	ctx = context.WithValue(ctx, langchain.ChatId, uid)
+
+	// 构建文件信息列表
+	data := make([]*domain.ChatFile, 0, len(files))
+	for _, file := range files {
+		data = append(data, &domain.ChatFile{
+			Path: file.File,
+			Name: file.Filename,
+			Time: timeutils.NowTime(),
+		})
+	}
+
+	// 将文件信息序列化为JSON
+	b, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	// 将文件信息保存到记忆机制中
+	err = l.memory.SaveContext(ctx, map[string]any{
+		langchain.Output: string(b),
+	}, map[string]any{
+		langchain.Output: "uploaded files",
+	})
+
+	return err
 }
