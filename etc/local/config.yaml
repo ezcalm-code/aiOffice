@@ -27,3 +27,8 @@ Tlog:
 LangChain:
   Url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
   ApiKey: 
+
+#上传文件
+Upload:
+  SavePath: "uploadFile/"
+  Host: "127.0.0.1:8080"

@@ -42,4 +42,8 @@ type Config struct {
 		Url    string
 		ApiKey string
 	}
+	Upload struct {
+		SavePath string
+		Host     string
+	}
 }
