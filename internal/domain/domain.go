@@ -158,12 +158,12 @@ type FinishedTodoReq struct {
 }
 
 type TodoListReq struct {
-	Id        string `json:"id,omitempty"`
-	UserId    string `json:"userId,omitempty"`
-	Page      int    `json:"page,omitempty"`
-	Count     int    `json:"count,omitempty"`
-	StartTime int64  `json:"startTime,omitempty"`
-	EndTime   int64  `json:"endTime,omitempty"`
+	Id        string `form:"id" json:"id,omitempty"`
+	UserId    string `form:"userId" json:"userId,omitempty"`
+	Page      int    `form:"page" json:"page,omitempty"`
+	Count     int    `form:"count" json:"count,omitempty"`
+	StartTime int64  `form:"startTime" json:"startTime,omitempty"`
+	EndTime   int64  `form:"endTime" json:"endTime,omitempty"`
 }
 
 type TodoListResp struct {

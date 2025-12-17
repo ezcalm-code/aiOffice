@@ -42,7 +42,7 @@ func NewTodoQueryTool(svc *svc.ServiceContext) *TodoQueryTool {
 			},
 			{
 				Name:        "userId",
-				Description: "user id to query, empty means current user",
+				Description: "the user id (MongoDB ObjectId format like '69313a67fb55d1a74f169133') to query todos for. MUST extract and use the exact userId if user provides it in the query. Leave empty only if user wants to query their own todos.",
 				Type:        "string",
 			},
 		}),
@@ -59,6 +59,7 @@ func (t *TodoQueryTool) Description() string {
 	return `a todo find interface.
 use when you need to find, query, search or list todos.
 use when user asks: "我的待办", "查询待办", "有哪些待办", "待办事项", etc.
+IMPORTANT: If user specifies a userId or user id (like "用户id是xxx" or "查询xxx的待办"), you MUST extract and use that exact userId value.
 If user doesn't provide specific conditions, query all todos by leaving fields empty.
 keep Chinese output.
 ` + t.outputparser.GetFormatInstructions()
@@ -85,9 +86,16 @@ func (t *TodoQueryTool) Call(ctx context.Context, input string) (string, error) 
 	uid := token.GetUid(ctx)
 	tokenStr, _ := ctx.Value("Authorization").(string)
 
+	// 打印解析出的userId
+	fmt.Printf("[TodoQueryTool] 解析出的userId: %v (类型: %T)\n", data["userId"], data["userId"])
+
 	// 如果没有指定userId，使用当前用户
-	if _, ok := data["userId"]; !ok || data["userId"] == "" {
+	userIdVal, ok := data["userId"]
+	if !ok || userIdVal == nil || userIdVal == "" {
 		data["userId"] = uid
+		fmt.Printf("[TodoQueryTool] 使用当前用户ID: %s\n", uid)
+	} else {
+		fmt.Printf("[TodoQueryTool] 使用指定的用户ID: %v\n", userIdVal)
 	}
 	data["count"] = 10
 
