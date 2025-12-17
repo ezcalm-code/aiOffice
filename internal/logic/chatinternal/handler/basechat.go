@@ -12,14 +12,9 @@ import (
 	"github.com/tmc/langchaingo/tools"
 )
 
-const _defaultMrklPrefix = `Today is {{.today}}.
-Answer the following questions as best you can. You have access to the following tools:
+const _defaultMrklPrefix = `Answer the following questions as best you can. You have access to the following tools:
 
 {{.tool_descriptions}}
-
-Current conversation:
-{{.history}}
-
 `
 
 type basechat struct {
