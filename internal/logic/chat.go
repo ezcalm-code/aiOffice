@@ -41,6 +41,7 @@ func NewChat(svc *svc.ServiceContext) Chat {
 	handlers := []langhandler.Handler{
 		chatinternal.NewDefaultHandler(svc),
 		chatinternal.NewTodoHandler(svc),
+		chatinternal.NewApprovalHandler(svc),
 	}
 
 	// 2.创建memory
