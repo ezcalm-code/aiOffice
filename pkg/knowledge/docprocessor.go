@@ -1,16 +1,16 @@
 package knowledge
 
 import (
-	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/ledongthuc/pdf"
 	"github.com/nguyenthenguyen/docx"
 	"github.com/tmc/langchaingo/schema"
 	"github.com/tmc/langchaingo/textsplitter"
+	"github.com/tmc/langchaingo/vectorstores"
 )
 
 // DocProcessor 多格式文档处理器
@@ -87,38 +87,10 @@ func (p *DocProcessor) extractMarkdown(filePath string) (string, error) {
 	return string(content), nil
 }
 
-// extractPDF 从 PDF 提取文本（使用纯 Go 库）
+// extractPDF 从 PDF 提取文本（使用 go-fitz 库，基于 MuPDF）
 func (p *DocProcessor) extractPDF(filePath string) (string, error) {
-	f, r, err := pdf.Open(filePath)
-	if err != nil {
-		return "", fmt.Errorf("打开PDF文件失败: %v", err)
-	}
-	defer f.Close()
-
-	var buf bytes.Buffer
-	totalPages := r.NumPage()
-
-	for i := 1; i <= totalPages; i++ {
-		page := r.Page(i)
-		if page.V.IsNull() {
-			continue
-		}
-		text, err := page.GetPlainText(nil)
-		if err != nil {
-			fmt.Printf("警告: 无法提取第 %d 页: %v\n", i, err)
-			continue
-		}
-		buf.WriteString(text)
-		buf.WriteString("\n")
-	}
-
-	text := p.cleanText(buf.String())
-	if len(strings.TrimSpace(text)) == 0 {
-		return "", fmt.Errorf("PDF文件中没有提取到有效文本")
-	}
-
-	fmt.Printf("[DocProcessor] PDF提取完成，共 %d 页，%d 字符\n", totalPages, len(text))
-	return text, nil
+	processor := NewPDFProcessor()
+	return processor.ExtractText(filePath)
 }
 
 // extractWord 从 Word 文档提取文本
@@ -257,4 +229,29 @@ func IsSupportedFormat(filePath string) bool {
 		}
 	}
 	return false
+}
+
+// VectorStore 向量存储接口
+type VectorStore interface {
+	AddDocuments(ctx context.Context, docs []schema.Document, options ...vectorstores.Option) ([]string, error)
+}
+
+// AddToVectorStore 将文档添加到向量存储（分批处理）
+func AddToVectorStore(ctx context.Context, store VectorStore, docs []schema.Document) error {
+	// 分批添加文档（阿里云 DashScope 限制每批最多 10 个）
+	batchSize := 10
+	for i := 0; i < len(docs); i += batchSize {
+		end := i + batchSize
+		if end > len(docs) {
+			end = len(docs)
+		}
+		batch := docs[i:end]
+
+		_, err := store.AddDocuments(ctx, batch)
+		if err != nil {
+			return fmt.Errorf("添加文档失败(批次 %d): %v", i/batchSize+1, err)
+		}
+		fmt.Printf("[Knowledge] 已添加第 %d 批，共 %d 个文档块\n", i/batchSize+1, len(batch))
+	}
+	return nil
 }

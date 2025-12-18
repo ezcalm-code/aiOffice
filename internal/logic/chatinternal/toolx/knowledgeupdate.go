@@ -102,10 +102,9 @@ func (k *KnowledgeUpdate) Call(ctx context.Context, input string) (string, error
 		}
 	}
 
-	// 添加文档到向量存储
-	_, err = k.store.AddDocuments(ctx, docs)
-	if err != nil {
-		return "", fmt.Errorf("添加文档失败: %v", err)
+	// 使用公共方法分批添加文档
+	if err := knowledge.AddToVectorStore(ctx, k.store, docs); err != nil {
+		return "", err
 	}
 
 	filename := filepath.Base(filePath)

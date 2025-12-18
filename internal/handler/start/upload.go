@@ -235,12 +235,11 @@ func (h *Upload) addToKnowledge(ctx context.Context, filePath string) error {
 		return fmt.Errorf("连接向量存储失败: %v", err)
 	}
 
-	// 添加文档到向量存储
-	_, err = store.AddDocuments(ctx, docs)
-	if err != nil {
-		return fmt.Errorf("添加文档失败: %v", err)
+	// 使用公共方法分批添加文档
+	if err := knowledge.AddToVectorStore(ctx, store, docs); err != nil {
+		return err
 	}
 
-	fmt.Printf("[Upload] 知识库入库成功: %s, %d 个文档块\n", filepath.Base(filePath), len(docs))
+	fmt.Printf("[Upload] 知识库入库成功: %s, 共 %d 个文档块\n", filepath.Base(filePath), len(docs))
 	return nil
 }
