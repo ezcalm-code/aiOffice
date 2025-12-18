@@ -39,3 +39,31 @@ export interface ChatState {
   connectionStatus: ConnectionStatus;
   currentConversation: string | null;
 }
+
+/**
+ * Knowledge Base types
+ * Requirements: 7.1, 7.3 - Knowledge base query and result display
+ */
+
+export interface KnowledgeQueryRequest {
+  prompts: string;
+  chatType: number; // 3 = knowledge query
+  relationId: number;
+}
+
+export interface KnowledgeQueryResult {
+  answer: string;
+  sources?: KnowledgeSource[];
+}
+
+export interface KnowledgeSource {
+  title: string;
+  content: string;
+  filename?: string;
+}
+
+export interface KnowledgeUploadResponse {
+  host: string;
+  file: string;
+  filename: string;
+}

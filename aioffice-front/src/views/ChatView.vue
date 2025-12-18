@@ -2,6 +2,7 @@
 /**
  * Chat View - AI Chat and real-time messaging
  * Requirements: 2.1, 2.2, 2.4, 3.1 - AI Chat and real-time messaging
+ * Requirements: 7.1, 7.3 - Knowledge base query integration
  */
 
 import { ref, computed, onMounted, onUnmounted } from 'vue';
@@ -9,6 +10,7 @@ import { useChatStore } from '../stores/chat';
 import { useUserStore } from '../stores/user';
 import ChatWindow from '../components/chat/ChatWindow.vue';
 import { post, upload } from '../services/http';
+import { uploadKnowledgeFile, validateKnowledgeFileType, ALLOWED_FILE_EXTENSIONS } from '../services/api/knowledge';
 import type { AIChatRequest, AIChatResponse, AIChatMessage } from '../types/chat';
 
 const chatStore = useChatStore();
@@ -24,13 +26,35 @@ const connectionStatus = computed(() => chatStore.connectionStatus);
 const isLoading = computed(() => chatStore.isLoading);
 const currentUserId = computed(() => userStore.id);
 
+// Chat mode: 'ai' for general AI chat, 'knowledge' for knowledge base queries
+const chatMode = ref<'ai' | 'knowledge'>('ai');
+
 /**
- * Send message to AI
+ * Toggle chat mode between AI and Knowledge base
+ */
+function toggleChatMode(): void {
+  chatMode.value = chatMode.value === 'ai' ? 'knowledge' : 'ai';
+}
+
+/**
+ * Send message to AI or Knowledge base
  * Requirements: 2.1 - WHEN a user sends a message to AI_Chat THEN display and send to backend
+ * Requirements: 7.1 - WHEN a user queries the Knowledge_Base THEN send query and display answers
  */
 async function handleSendMessage(content: string): Promise<void> {
   if (!content.trim()) return;
 
+  // Check if this is a knowledge query (starts with /kb or in knowledge mode)
+  const isKnowledgeQuery = content.startsWith('/kb ') || chatMode.value === 'knowledge';
+  const queryContent = content.startsWith('/kb ') ? content.substring(4).trim() : content;
+
+  if (isKnowledgeQuery) {
+    // Requirements: 7.1 - Knowledge base query
+    await chatStore.sendKnowledgeQuery(queryContent);
+    return;
+  }
+
+  // Regular AI chat
   // Add user message to store
   chatStore.sendAIMessage(content);
 
@@ -77,18 +101,17 @@ async function handleSendMessage(content: string): Promise<void> {
 }
 
 /**
- * Handle file upload
+ * Handle file upload to knowledge base
  * Requirements: 2.3 - WHEN a user uploads a file in AI_Chat THEN upload and display progress
+ * Requirements: 7.2 - WHEN an admin uploads a document to Knowledge_Base THEN support .md, .pdf, .docx, .txt formats
  */
 async function handleFileUpload(file: File): Promise<void> {
   if (isUploading.value) return;
 
-  // Validate file type
-  const allowedTypes = ['.md', '.pdf', '.docx', '.txt'];
-  const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
-  
-  if (!allowedTypes.includes(fileExtension)) {
-    chatStore.addAIResponse(`不支持的文件类型。请上传以下格式的文件：${allowedTypes.join(', ')}`);
+  // Validate file type using knowledge base validation
+  // Requirements: 7.2 - Support .md, .pdf, .docx, .txt formats
+  if (!validateKnowledgeFileType(file.name)) {
+    chatStore.addAIResponse(`不支持的文件类型。请上传以下格式的文件：${ALLOWED_FILE_EXTENSIONS.join(', ')}`);
     return;
   }
 
@@ -96,18 +119,16 @@ async function handleFileUpload(file: File): Promise<void> {
   uploadProgress.value = 0;
 
   // Add user message about upload
-  chatStore.sendAIMessage(`正在上传文件: ${file.name}`);
+  chatStore.sendAIMessage(`正在上传文件到知识库: ${file.name}`);
 
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await upload<{ url: string }>('/api/upload', formData, (progress) => {
+    // Use knowledge base upload service
+    const response = await uploadKnowledgeFile(file, (progress) => {
       uploadProgress.value = progress;
     });
 
-    if (response.code === 0) {
-      chatStore.addAIResponse(`文件 "${file.name}" 上传成功！`);
+    if (response.code === 0 && response.data) {
+      chatStore.addAIResponse(`文件 "${file.name}" 已成功上传到知识库！您现在可以通过输入 "/kb 您的问题" 或切换到知识库模式来查询相关内容。`);
     } else {
       chatStore.addAIResponse(`文件上传失败: ${response.msg || '未知错误'}`);
     }
@@ -139,6 +160,24 @@ onUnmounted(() => {
 
 <template>
   <div class="chat-view">
+    <!-- Mode Toggle -->
+    <div class="mode-toggle">
+      <button 
+        class="mode-btn"
+        :class="{ active: chatMode === 'ai' }"
+        @click="chatMode = 'ai'"
+      >
+        🤖 AI 助手
+      </button>
+      <button 
+        class="mode-btn"
+        :class="{ active: chatMode === 'knowledge' }"
+        @click="chatMode = 'knowledge'"
+      >
+        📚 知识库
+      </button>
+    </div>
+
     <div class="chat-main">
       <ChatWindow
         :messages="aiMessages"
@@ -146,7 +185,7 @@ onUnmounted(() => {
         :connection-status="connectionStatus"
         :loading="isLoading"
         type="ai"
-        title="AI 智能助手"
+        :title="chatMode === 'knowledge' ? '知识库查询' : 'AI 智能助手'"
         @send="handleSendMessage"
         @upload="handleFileUpload"
       />
@@ -170,6 +209,41 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #fff;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.mode-btn {
+  padding: 8px 16px;
+  border: 1px solid #dcdfe6;
+  border-radius: 20px;
+  background-color: #fff;
+  color: #606266;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.mode-btn.active {
+  background-color: #409eff;
+  border-color: #409eff;
+  color: #fff;
+}
+
+.mode-btn.active:nth-child(2) {
+  background-color: #67c23a;
+  border-color: #67c23a;
 }
 
 .chat-main {

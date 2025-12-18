@@ -1,6 +1,7 @@
 /**
  * Chat Store - Pinia state management for chat functionality
  * Requirements: 2.1, 2.2, 3.2 - AI Chat and real-time messaging
+ * Requirements: 7.1, 7.3, 7.4 - Knowledge base query
  */
 
 import { defineStore } from 'pinia';
@@ -9,9 +10,11 @@ import type {
   ChatMessage, 
   AIChatMessage, 
   ConnectionStatus, 
-  ChatState 
+  ChatState,
+  KnowledgeQueryResult 
 } from '../types/chat';
 import websocketClient from '../services/websocket';
+import { queryKnowledge, parseKnowledgeResponse } from '../services/api/knowledge';
 
 export const useChatStore = defineStore('chat', () => {
   // State
@@ -223,6 +226,59 @@ export const useChatStore = defineStore('chat', () => {
     return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   }
 
+  /**
+   * Send a knowledge base query
+   * Requirements: 7.1 - WHEN a user queries the Knowledge_Base THEN send query and display answers
+   * Requirements: 7.4 - WHILE Knowledge_Base is processing THEN display loading state
+   * 
+   * @param query Query string
+   * @returns Promise with knowledge query result
+   */
+  async function sendKnowledgeQuery(query: string): Promise<KnowledgeQueryResult | null> {
+    if (!query.trim()) return null;
+
+    // Add user message
+    sendAIMessage(query);
+
+    // Set loading state
+    // Requirements: 7.4 - WHILE Knowledge_Base is processing a query THEN display loading state
+    setLoading(true);
+
+    try {
+      const response = await queryKnowledge(query);
+
+      if (response.code === 0 && response.data) {
+        // Requirements: 7.3 - Display answer with source references
+        const result = parseKnowledgeResponse(response.data);
+        
+        // Format response with sources
+        let responseContent = result.answer;
+        
+        if (result.sources && result.sources.length > 0) {
+          responseContent += '\n\n📚 参考来源：';
+          result.sources.forEach((source, index) => {
+            responseContent += `\n${index + 1}. ${source.title || source.filename || '未知来源'}`;
+            if (source.content) {
+              responseContent += `\n   ${source.content.substring(0, 100)}${source.content.length > 100 ? '...' : ''}`;
+            }
+          });
+        }
+
+        addAIResponse(responseContent);
+        return result;
+      } else {
+        addAIResponse('抱歉，未能找到相关信息。请尝试其他问题。');
+        return null;
+      }
+    } catch (error) {
+      console.error('Knowledge query error:', error);
+      addAIResponse('查询知识库时出现错误，请稍后重试。');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     // State
     messages,
@@ -250,5 +306,6 @@ export const useChatStore = defineStore('chat', () => {
     setCurrentConversation,
     clearMessages,
     clearAIMessages,
+    sendKnowledgeQuery,
   };
 });

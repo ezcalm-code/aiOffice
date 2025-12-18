@@ -68,11 +68,14 @@ const timestampArbitrary = fc.integer({
 /**
  * Arbitrary generator for safe text strings (no HTML special characters)
  * This avoids issues with HTML escaping in rendered output comparisons
+ * Also normalizes whitespace to avoid HTML whitespace collapsing issues
  */
 const safeTextArbitrary = (minLength: number, maxLength: number) => 
-  fc.string({ minLength, maxLength })
+  fc.string({ minLength: minLength + 4, maxLength: maxLength + 4 })
     .map(s => s.replace(/[<>&"']/g, ''))  // Remove HTML special characters
-    .filter(s => s.trim().length >= minLength);
+    .map(s => s.trim())  // Trim leading/trailing whitespace
+    .map(s => s.replace(/\s+/g, ' '))  // Collapse multiple whitespace to single space
+    .filter(s => s.length >= minLength && s.length <= maxLength);
 
 /**
  * Arbitrary generator for valid Todo objects
