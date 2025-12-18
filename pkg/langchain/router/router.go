@@ -47,10 +47,13 @@ func NewRouter(llm llms.Model, handlers []handler.Handler, mem schema.Memory) *R
 用户输入: {{.input}}
 
 规则：
-1. 如果用户要创建待办、任务、提醒等，选择 todo
-2. 其他情况选择 default
+1. 如果用户要创建待办、任务、提醒、查询待办等，选择 todo
+2. 如果用户要请假、补卡、外出、查询审批等，选择 approval
+3. 如果用户询问公司制度、员工手册、考勤规则、请假流程、报销流程等知识库内容，选择 knowledge
+4. 如果用户要更新知识库、添加文档到知识库，选择 knowledge
+5. 其他情况选择 default
 
-请只返回处理器名称（todo 或 default），不要返回其他内容。`,
+请只返回处理器名称，不要返回其他内容。`,
 		[]string{"input", "handlers"},
 	)
 
