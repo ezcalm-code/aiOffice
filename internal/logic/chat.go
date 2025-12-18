@@ -93,6 +93,11 @@ func (l *chat) AIChat(ctx context.Context, req *domain.ChatReq) (resp *domain.Ch
 }
 
 func (l *chat) aiService(ctx context.Context, req *domain.ChatReq) (output *domain.ChatResp, err error) {
+	uid := token.GetUid(ctx)
+
+	// 保存用户输入到数据库
+	l.saveAIChatLog(ctx, uid, "user", req.Prompts)
+
 	// 将chatlog相关参数通过context传递,避免影响memory的保存逻辑
 	ctx = context.WithValue(ctx, "relationId", req.RelationId)
 	// ctx = context.WithValue(ctx, "startTime", req.StartTime)
@@ -108,6 +113,8 @@ func (l *chat) aiService(ctx context.Context, req *domain.ChatReq) (output *doma
 			parts := strings.Split(errMsg, ": ")
 			if len(parts) > 1 {
 				content := parts[len(parts)-1]
+				// 保存AI回复到数据库
+				l.saveAIChatLog(ctx, uid, "assistant", content)
 				// 返回提取到的内容
 				return &domain.ChatResp{
 					ChatType: domain.DefaultHandler,
@@ -119,11 +126,13 @@ func (l *chat) aiService(ctx context.Context, req *domain.ChatReq) (output *doma
 		if strings.Contains(errMsg, "missing key in output values") {
 			// 尝试从context获取工具执行结果
 			if toolResult, ok := ctx.Value("toolResult").(string); ok && toolResult != "" {
+				l.saveAIChatLog(ctx, uid, "assistant", toolResult)
 				return &domain.ChatResp{
 					ChatType: domain.TodoFind,
 					Data:     toolResult,
 				}, nil
 			}
+			l.saveAIChatLog(ctx, uid, "assistant", "操作已完成")
 			return &domain.ChatResp{
 				ChatType: domain.TodoAdd,
 				Data:     "操作已完成",
@@ -147,13 +156,54 @@ func (l *chat) aiService(ctx context.Context, req *domain.ChatReq) (output *doma
 	var res domain.ChatResp
 	if err := json.Unmarshal([]byte(data), &res); err != nil {
 		// 解析失败时返回默认处理器类型和原始数据
+		// 保存AI回复到数据库
+		l.saveAIChatLog(ctx, uid, "assistant", data)
 		return &domain.ChatResp{
 			ChatType: domain.DefaultHandler,
 			Data:     data,
 		}, nil
 	}
 
+	// 保存AI回复到数据库（提取实际内容）
+	if content, ok := res.Data.(string); ok {
+		l.saveAIChatLog(ctx, uid, "assistant", content)
+	} else {
+		// 如果Data不是字符串，序列化后保存
+		if b, err := json.Marshal(res.Data); err == nil {
+			l.saveAIChatLog(ctx, uid, "assistant", string(b))
+		}
+	}
+
 	return &res, nil
+}
+
+// saveAIChatLog 保存AI对话记录到数据库
+func (l *chat) saveAIChatLog(ctx context.Context, uid, role, content string) {
+	// AI对话使用固定的conversationId格式: ai_{uid}
+	conversationId := "ai_" + uid
+
+	chatlog := model.ChatLog{
+		ConversationId: conversationId,
+		SendId:         uid,
+		RecvId:         "ai",              // AI作为接收方
+		ChatType:       model.ChatType(3), // 3=AI对话
+		MsgContent:     content,
+		SendTime:       timeutils.Now(),
+	}
+
+	// 如果是AI回复，交换发送者和接收者
+	if role == "assistant" {
+		chatlog.SendId = "ai"
+		chatlog.RecvId = uid
+	}
+
+	// 异步保存，不阻塞主流程
+	go func() {
+		if err := l.svc.ChatLogModel.Insert(context.Background(), &chatlog); err != nil {
+			// 记录错误但不影响主流程
+			println("[AIChat] 保存对话记录失败:", err.Error())
+		}
+	}()
 }
 
 // chatlog 通用的聊天消息保存方法，将消息记录到数据库
