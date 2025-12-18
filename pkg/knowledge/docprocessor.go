@@ -53,11 +53,7 @@ func (p *DocProcessor) Process(filePath string) ([]schema.Document, error) {
 		return p.splitMarkdown(text, filePath)
 
 	case ".pdf":
-		text, err = p.extractPDF(filePath)
-		if err != nil {
-			return nil, err
-		}
-		return p.splitRecursive(text, filePath)
+		return nil, fmt.Errorf("PDF格式暂不支持，请将文件转换为 .docx 或 .txt 格式后再上传")
 
 	case ".docx":
 		text, err = p.extractWord(filePath)
@@ -85,12 +81,6 @@ func (p *DocProcessor) extractMarkdown(filePath string) (string, error) {
 		return "", fmt.Errorf("读取Markdown文件失败: %v", err)
 	}
 	return string(content), nil
-}
-
-// extractPDF 从 PDF 提取文本（使用 go-fitz 库，基于 MuPDF）
-func (p *DocProcessor) extractPDF(filePath string) (string, error) {
-	processor := NewPDFProcessor()
-	return processor.ExtractText(filePath)
 }
 
 // extractWord 从 Word 文档提取文本
@@ -217,7 +207,7 @@ func (p *DocProcessor) cleanText(text string) string {
 
 // SupportedFormats 返回支持的文件格式
 func SupportedFormats() []string {
-	return []string{".md", ".markdown", ".pdf", ".docx", ".txt"}
+	return []string{".md", ".markdown", ".docx", ".txt"}
 }
 
 // IsSupportedFormat 检查文件格式是否支持
