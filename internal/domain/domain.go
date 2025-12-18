@@ -286,9 +286,10 @@ type ChatResp struct {
 }
 
 type FileResp struct {
-	Host     string `json:"host"`     // 文件访问主机地址
-	File     string `json:"file"`     // 文件相对路径
-	Filename string `json:"filename"` // 文件名称
+	Host      string `json:"host"`      // 文件访问主机地址
+	File      string `json:"file"`      // 文件相对路径
+	Filename  string `json:"filename"`  // 文件名称
+	Knowledge bool   `json:"knowledge"` // 是否已入知识库
 }
 
 type FileListResp struct {

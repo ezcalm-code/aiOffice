@@ -2,17 +2,21 @@ package start
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tmc/langchaingo/embeddings"
+	"github.com/tmc/langchaingo/vectorstores/redisvector"
 
 	"aiOffice/internal/domain"
 	"aiOffice/internal/logic"
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/httpx"
+	"aiOffice/pkg/knowledge"
 	"aiOffice/pkg/timeutils"
 )
 
@@ -94,6 +98,16 @@ func (h *Upload) File(ctx *gin.Context) {
 		h.chat.File(ctx.Request.Context(), []*domain.FileResp{&resp})
 	}
 
+	// 如果指定了knowledge=1参数，自动入库到知识库
+	knowledgeFlag := ctx.Request.FormValue("knowledge")
+	if knowledgeFlag == "1" {
+		if err := h.addToKnowledge(ctx.Request.Context(), resp.File); err != nil {
+			httpx.FailWithErr(ctx, fmt.Errorf("知识库入库失败: %v", err))
+			return
+		}
+		resp.Knowledge = true
+	}
+
 	httpx.OkWithData(ctx, resp)
 }
 
@@ -173,5 +187,60 @@ func (h *Upload) Multiplefiles(ctx *gin.Context) {
 		h.chat.File(ctx.Request.Context(), respList)
 	}
 
+	// 如果指定了knowledge=1参数，自动入库到知识库
+	knowledgeFlag := ctx.Request.FormValue("knowledge")
+	if knowledgeFlag == "1" {
+		for _, resp := range respList {
+			if err := h.addToKnowledge(ctx.Request.Context(), resp.File); err != nil {
+				httpx.FailWithErr(ctx, fmt.Errorf("知识库入库失败(%s): %v", resp.Filename, err))
+				return
+			}
+			resp.Knowledge = true
+		}
+	}
+
 	httpx.OkWithData(ctx, domain.FileListResp{List: respList})
+}
+
+// addToKnowledge 将文件添加到知识库
+func (h *Upload) addToKnowledge(ctx context.Context, filePath string) error {
+	// 检查文件格式是否支持
+	if !knowledge.IsSupportedFormat(filePath) {
+		return fmt.Errorf("不支持的文件格式，支持: %v", knowledge.SupportedFormats())
+	}
+
+	// 使用多格式文档处理器
+	processor := knowledge.NewDocProcessor(500, 50)
+	docs, err := processor.Process(filePath)
+	if err != nil {
+		return fmt.Errorf("文档处理失败: %v", err)
+	}
+
+	if len(docs) == 0 {
+		return fmt.Errorf("文档中没有提取到有效内容")
+	}
+
+	// 获取向量存储
+	embedder, err := embeddings.NewEmbedder(h.svcCtx.LLM)
+	if err != nil {
+		return fmt.Errorf("创建embedder失败: %v", err)
+	}
+
+	store, err := redisvector.New(ctx,
+		redisvector.WithEmbedder(embedder),
+		redisvector.WithConnectionURL("redis://"+h.svcCtx.Config.Redis.Addr),
+		redisvector.WithIndexName("knowledge", true),
+	)
+	if err != nil {
+		return fmt.Errorf("连接向量存储失败: %v", err)
+	}
+
+	// 添加文档到向量存储
+	_, err = store.AddDocuments(ctx, docs)
+	if err != nil {
+		return fmt.Errorf("添加文档失败: %v", err)
+	}
+
+	fmt.Printf("[Upload] 知识库入库成功: %s, %d 个文档块\n", filepath.Base(filePath), len(docs))
+	return nil
 }
