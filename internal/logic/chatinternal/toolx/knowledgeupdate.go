@@ -8,11 +8,10 @@ import (
 	"path/filepath"
 
 	"aiOffice/internal/svc"
+	"aiOffice/pkg/knowledge"
 	"aiOffice/pkg/langchain/outputparserx"
 
 	"github.com/tmc/langchaingo/embeddings"
-	"github.com/tmc/langchaingo/schema"
-	"github.com/tmc/langchaingo/textsplitter"
 	"github.com/tmc/langchaingo/vectorstores/redisvector"
 )
 
@@ -47,6 +46,7 @@ func (k *KnowledgeUpdate) Description() string {
 	return `a knowledge base update interface.
 use when you need to update knowledge base content.
 use when user says: "更新知识库", "添加文档到知识库", "上传文件到知识库"
+支持的文件格式: .md, .pdf, .docx, .txt
 ` + k.outputparser.GetFormatInstructions()
 }
 
@@ -78,33 +78,20 @@ func (k *KnowledgeUpdate) Call(ctx context.Context, input string) (string, error
 		return "", fmt.Errorf("文件不存在: %s", filePath)
 	}
 
-	// 读取文件内容
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("读取文件失败: %v", err)
+	// 检查文件格式是否支持
+	if !knowledge.IsSupportedFormat(filePath) {
+		return "", fmt.Errorf("不支持的文件格式，支持: %v", knowledge.SupportedFormats())
 	}
 
-	// 简单文本分块
-	splitter := textsplitter.NewRecursiveCharacter(
-		textsplitter.WithChunkSize(500),
-		textsplitter.WithChunkOverlap(50),
-	)
-
-	chunks, err := splitter.SplitText(string(content))
+	// 使用多格式文档处理器
+	processor := knowledge.NewDocProcessor(500, 50)
+	docs, err := processor.Process(filePath)
 	if err != nil {
-		return "", fmt.Errorf("文本分块失败: %v", err)
+		return "", fmt.Errorf("文档处理失败: %v", err)
 	}
 
-	// 转换为文档
-	docs := make([]schema.Document, 0, len(chunks))
-	for i, chunk := range chunks {
-		docs = append(docs, schema.Document{
-			PageContent: chunk,
-			Metadata: map[string]any{
-				"source":   filePath,
-				"chunk_id": i,
-			},
-		})
+	if len(docs) == 0 {
+		return "", fmt.Errorf("文档中没有提取到有效内容")
 	}
 
 	// 获取向量存储
@@ -121,7 +108,8 @@ func (k *KnowledgeUpdate) Call(ctx context.Context, input string) (string, error
 		return "", fmt.Errorf("添加文档失败: %v", err)
 	}
 
-	return fmt.Sprintf("知识库更新成功！已添加 %d 个文档块", len(docs)), nil
+	filename := filepath.Base(filePath)
+	return fmt.Sprintf("知识库更新成功！\n文件: %s\n已添加 %d 个文档块", filename, len(docs)), nil
 }
 
 // getKnowledgeStore 获取知识库的向量存储
