@@ -43,6 +43,7 @@ func NewChat(svc *svc.ServiceContext) Chat {
 		chatinternal.NewDefaultHandler(svc),
 		chatinternal.NewTodoHandler(svc),
 		chatinternal.NewApprovalHandler(svc),
+		chatinternal.NewKnowledgeHandler(svc),
 	}
 
 	// 2.创建memory
