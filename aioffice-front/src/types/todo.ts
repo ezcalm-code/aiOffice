@@ -38,6 +38,8 @@ export interface TodoState {
 }
 
 export interface CreateTodoRequest {
+  creatorId: string;
+  creatorName: string;
   title: string;
   desc: string;
   deadlineAt: number;

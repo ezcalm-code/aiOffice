@@ -156,7 +156,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await getDepartments(params);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         departments.value = response.data.data || [];
       }
     } catch (error) {
@@ -174,7 +174,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await getDepartmentById(id);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         currentDepartment.value = response.data;
         return response.data;
       }
@@ -195,7 +195,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await getUserDepartment(userId);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         currentDepartment.value = response.data;
         return response.data;
       }
@@ -218,7 +218,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await createDepartment(data);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         // Refresh the department list to include the new item
         await fetchDepartments();
         return response.data.id;
@@ -240,7 +240,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await updateDepartment(data);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Refresh the department list
         await fetchDepartments();
         return true;
@@ -262,7 +262,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await deleteDepartment(id);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Refresh the department list
         await fetchDepartments();
         return true;
@@ -284,7 +284,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await getDepartmentMembers(depId);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         members.value = response.data.data || [];
       }
     } catch (error) {
@@ -304,7 +304,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await assignUsers(data);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Refresh the member list
         await fetchDepartmentMembers(data.depId);
         return true;
@@ -327,7 +327,7 @@ export const useDepartmentStore = defineStore('department', () => {
     setLoading(true);
     try {
       const response = await removeUserFromDepartment(depId, userId);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Update local state - remove user from members list
         members.value = members.value.filter(m => m.userId !== userId);
         return true;

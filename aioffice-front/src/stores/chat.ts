@@ -247,7 +247,7 @@ export const useChatStore = defineStore('chat', () => {
     try {
       const response = await queryKnowledge(query);
 
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         // Requirements: 7.3 - Display answer with source references
         const result = parseKnowledgeResponse(response.data);
         

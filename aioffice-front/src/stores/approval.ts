@@ -117,7 +117,7 @@ export const useApprovalStore = defineStore('approval', () => {
     setLoading(true);
     try {
       const response = await getApprovals(params);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         approvals.value = response.data.data || [];
       }
     } catch (error) {
@@ -137,7 +137,7 @@ export const useApprovalStore = defineStore('approval', () => {
     setLoading(true);
     try {
       const response = await getApprovalDetail(id);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         currentApproval.value = response.data;
         return response.data;
       }
@@ -160,7 +160,7 @@ export const useApprovalStore = defineStore('approval', () => {
     setLoading(true);
     try {
       const response = await createLeaveApproval(data);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         await fetchApprovals();
         return response.data.id;
       }
@@ -182,7 +182,7 @@ export const useApprovalStore = defineStore('approval', () => {
     setLoading(true);
     try {
       const response = await createGoOutApproval(data);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         await fetchApprovals();
         return response.data.id;
       }
@@ -204,7 +204,7 @@ export const useApprovalStore = defineStore('approval', () => {
     setLoading(true);
     try {
       const response = await createMakeCardApproval(data);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         await fetchApprovals();
         return response.data.id;
       }
@@ -225,7 +225,7 @@ export const useApprovalStore = defineStore('approval', () => {
     setLoading(true);
     try {
       const response = await disposeApproval(data);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Update local state
         const index = approvals.value.findIndex(a => a.id === data.id);
         if (index !== -1) {
@@ -252,7 +252,7 @@ export const useApprovalStore = defineStore('approval', () => {
     setLoading(true);
     try {
       const response = await cancelApproval(id);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Update local state
         const index = approvals.value.findIndex(a => a.id === id);
         if (index !== -1) {
