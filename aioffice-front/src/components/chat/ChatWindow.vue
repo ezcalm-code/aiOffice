@@ -16,6 +16,7 @@ interface Props {
   loading?: boolean;
   type?: 'chat' | 'ai';
   title?: string;
+  pendingFile?: File | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -25,11 +26,14 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
   type: 'ai',
   title: 'AI 助手',
+  pendingFile: null,
 });
 
 const emit = defineEmits<{
   (e: 'send', message: string): void;
   (e: 'upload', file: File): void;
+  (e: 'cancel-file'): void;
+  (e: 'confirm-upload'): void;
 }>();
 
 const messagesContainerRef = ref<HTMLElement | null>(null);
@@ -72,10 +76,24 @@ function handleSend(message: string): void {
 }
 
 /**
- * Handle file upload
+ * Handle file selection
  */
 function handleUpload(file: File): void {
   emit('upload', file);
+}
+
+/**
+ * Cancel pending file
+ */
+function handleCancelFile(): void {
+  emit('cancel-file');
+}
+
+/**
+ * Confirm file upload
+ */
+function handleConfirmUpload(): void {
+  emit('confirm-upload');
 }
 
 // Auto-scroll when new messages arrive
@@ -128,6 +146,19 @@ onMounted(() => {
           <span></span>
         </div>
         <span class="loading-text">AI 正在思考...</span>
+      </div>
+    </div>
+
+    <!-- Pending File Preview -->
+    <div v-if="pendingFile" class="pending-file">
+      <div class="file-info">
+        <span class="file-icon">📄</span>
+        <span class="file-name">{{ pendingFile.name }}</span>
+        <span class="file-size">({{ (pendingFile.size / 1024).toFixed(1) }} KB)</span>
+      </div>
+      <div class="file-actions">
+        <button class="cancel-btn" @click="handleCancelFile">取消</button>
+        <button class="upload-btn-confirm" @click="handleConfirmUpload">上传</button>
       </div>
     </div>
 
@@ -284,5 +315,71 @@ onMounted(() => {
 
 .loading-text {
   font-size: 13px;
+}
+
+/* Pending file preview */
+.pending-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #f0f9eb;
+  border-top: 1px solid #e1f3d8;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #67c23a;
+}
+
+.file-icon {
+  font-size: 20px;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.file-size {
+  font-size: 12px;
+  color: #909399;
+}
+
+.file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cancel-btn,
+.upload-btn-confirm {
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn {
+  background-color: #fff;
+  border: 1px solid #dcdfe6;
+  color: #606266;
+}
+
+.cancel-btn:hover {
+  border-color: #c0c4cc;
+}
+
+.upload-btn-confirm {
+  background-color: #67c23a;
+  border: 1px solid #67c23a;
+  color: #fff;
+}
+
+.upload-btn-confirm:hover {
+  background-color: #85ce61;
+  border-color: #85ce61;
 }
 </style>
