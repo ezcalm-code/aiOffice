@@ -47,11 +47,11 @@ async function handleFormSubmit(
 ) {
   try {
     // Determine which type of approval to create based on the data structure
-    if ('type' in data && 'timeType' in data) {
+    if ('leave' in data) {
       await approvalStore.createLeave(data as CreateLeaveApprovalRequest);
-    } else if ('duration' in data && !('checkType' in data)) {
+    } else if ('goOut' in data) {
       await approvalStore.createGoOut(data as CreateGoOutApprovalRequest);
-    } else {
+    } else if ('makeCard' in data) {
       await approvalStore.createMakeCard(data as CreateMakeCardApprovalRequest);
     }
     showCreateForm.value = false;

@@ -66,6 +66,7 @@ export async function getApprovalDetail(id: string): Promise<ApiResponse<Approva
  * @returns Promise with created approval ID
  */
 export async function createApproval(data: CreateLeaveApprovalRequest | CreateGoOutApprovalRequest | CreateMakeCardApprovalRequest): Promise<ApiResponse<{ id: string }>> {
+  console.log('Creating approval with data:', JSON.stringify(data, null, 2));
   return post<{ id: string }>(APPROVAL_BASE, data);
 }
 

@@ -42,7 +42,6 @@ export interface LeaveInfo {
   type: number;
   startTime: number;
   endTime: number;
-  duration: number;
   reason: string;
   timeType: number; // 1=小时, 2=天
 }

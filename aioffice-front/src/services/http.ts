@@ -34,6 +34,11 @@ httpClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Debug: 打印实际发送的请求数据
+    if (config.data) {
+      console.log('HTTP Request:', config.method?.toUpperCase(), config.url);
+      console.log('Request Body:', JSON.stringify(config.data, null, 2));
+    }
     return config;
   },
   (error: AxiosError) => {

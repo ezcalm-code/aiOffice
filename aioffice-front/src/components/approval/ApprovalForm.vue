@@ -7,6 +7,7 @@
 
 import { ref, watch } from 'vue';
 import { useUserStore } from '../../stores/user';
+import { getUser } from '../../utils/storage';
 import type { 
   CreateLeaveApprovalRequest,
   CreateGoOutApprovalRequest,
@@ -213,23 +214,29 @@ function handleSubmit() {
   let isValid = false;
   let data: CreateLeaveApprovalRequest | CreateGoOutApprovalRequest | CreateMakeCardApprovalRequest;
   
-  const userId = userStore.user?.id || '';
+  // 优先从store获取，如果没有则从storage获取
+  const storedUser = getUser();
+  const userId = userStore.id || storedUser?.id || '';
+  const userName = userStore.name || storedUser?.name || '';
+  
+  console.log('User info:', { userId, userName, storeId: userStore.id, storedUser });
   
   switch (formType.value) {
     case 'leave':
       isValid = validateLeaveForm();
+      const leaveTypeLabel = leaveTypeOptions.find(o => o.value === leaveForm.value.type)?.label || '请假';
+      const leaveTimeUnit = leaveForm.value.timeType === 1 ? '小时' : '天';
       data = {
         userId,
-        type: leaveForm.value.type,
-        title: `${leaveTypeOptions.find(o => o.value === leaveForm.value.type)?.label || '请假'}申请`,
+        type: 2, // LeaveApproval = 2 请假
+        abstract: `${userName}申请${leaveTypeLabel}${leaveForm.value.duration}${leaveTimeUnit}`,
         reason: leaveForm.value.reason,
         leave: {
-          type: leaveForm.value.type,
-          startTime: leaveForm.value.startTime,
-          endTime: leaveForm.value.endTime,
-          duration: leaveForm.value.duration,
-          reason: leaveForm.value.reason,
-          timeType: leaveForm.value.timeType,
+          type: Number(leaveForm.value.type),
+          startTime: Number(leaveForm.value.startTime),
+          endTime: Number(leaveForm.value.endTime),
+          reason: String(leaveForm.value.reason),
+          timeType: Number(leaveForm.value.timeType),
         },
       };
       break;
@@ -237,29 +244,30 @@ function handleSubmit() {
       isValid = validateGoOutForm();
       data = {
         userId,
-        type: 10, // 外出类型
-        title: '外出申请',
+        type: 4, // 外出类型（根据后端定义）
+        abstract: `${userName}申请外出${goOutForm.value.duration}小时`,
         reason: goOutForm.value.reason,
         goOut: {
-          startTime: goOutForm.value.startTime,
-          endTime: goOutForm.value.endTime,
-          duration: goOutForm.value.duration,
-          reason: goOutForm.value.reason,
+          startTime: Number(goOutForm.value.startTime),
+          endTime: Number(goOutForm.value.endTime),
+          duration: Number(goOutForm.value.duration),
+          reason: String(goOutForm.value.reason),
         },
       };
       break;
     case 'makecard':
       isValid = validateMakeCardForm();
+      const checkTypeLabel = checkTypeOptions.find(o => o.value === makeCardForm.value.workCheckType)?.label || '打卡';
       data = {
         userId,
-        type: 11, // 补卡类型
-        title: '补卡申请',
+        type: 3, // MakeCardApproval = 3 补卡
+        abstract: `${userName}申请补${checkTypeLabel}`,
         reason: makeCardForm.value.reason,
         makeCard: {
-          date: makeCardForm.value.date,
-          day: makeCardForm.value.day,
-          workCheckType: makeCardForm.value.workCheckType,
-          reason: makeCardForm.value.reason,
+          date: Number(makeCardForm.value.date),
+          day: Number(makeCardForm.value.day),
+          workCheckType: Number(makeCardForm.value.workCheckType),
+          reason: String(makeCardForm.value.reason),
         },
       };
       break;
