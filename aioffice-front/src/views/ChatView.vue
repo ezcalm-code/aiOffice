@@ -140,9 +140,12 @@ async function uploadPendingFile(): Promise<void> {
   uploadProgress.value = 0;
   pendingFile.value = null;
 
-  // Add user message about upload
-  const targetText = isKnowledgeMode ? '知识库' : '服务器';
-  chatStore.sendAIMessage(`正在上传文件到${targetText}: ${file.name}`);
+  // Add user message about upload to current mode only
+  if (isKnowledgeMode) {
+    chatStore.sendKnowledgeMessage(`正在上传文件到知识库: ${file.name}`);
+  } else {
+    chatStore.sendAIMessage(`正在上传文件: ${file.name}`);
+  }
 
   try {
     // Use knowledge base upload service, only add to knowledge when in knowledge mode
@@ -157,13 +160,19 @@ async function uploadPendingFile(): Promise<void> {
         chatStore.addAIResponse(`文件 "${file.name}" 上传成功！`);
       }
     } else {
-      const addResponse = isKnowledgeMode ? chatStore.addKnowledgeResponse : chatStore.addAIResponse;
-      addResponse(`文件上传失败: ${response.msg || '未知错误'}`);
+      if (isKnowledgeMode) {
+        chatStore.addKnowledgeResponse(`文件上传失败: ${response.msg || '未知错误'}`);
+      } else {
+        chatStore.addAIResponse(`文件上传失败: ${response.msg || '未知错误'}`);
+      }
     }
   } catch (error) {
     console.error('File upload error:', error);
-    const addResponse = isKnowledgeMode ? chatStore.addKnowledgeResponse : chatStore.addAIResponse;
-    addResponse('文件上传失败，请稍后重试。');
+    if (isKnowledgeMode) {
+      chatStore.addKnowledgeResponse('文件上传失败，请稍后重试。');
+    } else {
+      chatStore.addAIResponse('文件上传失败，请稍后重试。');
+    }
   } finally {
     isUploading.value = false;
     uploadProgress.value = 0;
