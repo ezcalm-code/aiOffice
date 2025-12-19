@@ -5,7 +5,8 @@
  * Property 12: Approval Form Validation
  */
 
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
+import { useUserStore } from '../../stores/user';
 import type { 
   CreateLeaveApprovalRequest,
   CreateGoOutApprovalRequest,
@@ -33,17 +34,17 @@ const emit = defineEmits<{
 const formType = ref<ApprovalFormType>(props.type);
 
 // Leave form data
-const leaveForm = ref<CreateLeaveApprovalRequest>({
-  type: 1,
+const leaveForm = ref({
+  type: 1,        // 请假类型
   startTime: 0,
   endTime: 0,
   duration: 0,
   reason: '',
-  timeType: 2, // Default to days
+  timeType: 2,    // Default to days
 });
 
 // Go-out form data
-const goOutForm = ref<CreateGoOutApprovalRequest>({
+const goOutForm = ref({
   startTime: 0,
   endTime: 0,
   duration: 0,
@@ -51,9 +52,10 @@ const goOutForm = ref<CreateGoOutApprovalRequest>({
 });
 
 // Make-card form data
-const makeCardForm = ref<CreateMakeCardApprovalRequest>({
+const makeCardForm = ref({
   date: 0,
-  checkType: 1,
+  day: 0,
+  workCheckType: 1,
   reason: '',
 });
 
@@ -146,7 +148,7 @@ function validateMakeCardForm(): boolean {
   if (!makeCardDate.value) {
     errors.value.makeCardDate = '请选择补卡日期';
   }
-  if (!makeCardForm.value.checkType) {
+  if (!makeCardForm.value.workCheckType) {
     errors.value.makeCardCheckType = '请选择补卡类型';
   }
   if (!makeCardForm.value.reason || makeCardForm.value.reason.trim().length === 0) {
@@ -196,26 +198,70 @@ watch([goOutStartDate, goOutEndDate], () => {
 
 watch(makeCardDate, () => {
   makeCardForm.value.date = dateToTimestamp(makeCardDate.value);
+  // day 格式为 YYYYMMDD
+  if (makeCardDate.value) {
+    makeCardForm.value.day = parseInt(makeCardDate.value.replace(/-/g, ''));
+  }
 });
 
+
+// Get current user ID from store
+const userStore = useUserStore();
 
 // Handle form submission
 function handleSubmit() {
   let isValid = false;
   let data: CreateLeaveApprovalRequest | CreateGoOutApprovalRequest | CreateMakeCardApprovalRequest;
   
+  const userId = userStore.user?.id || '';
+  
   switch (formType.value) {
     case 'leave':
       isValid = validateLeaveForm();
-      data = { ...leaveForm.value };
+      data = {
+        userId,
+        type: leaveForm.value.type,
+        title: `${leaveTypeOptions.find(o => o.value === leaveForm.value.type)?.label || '请假'}申请`,
+        reason: leaveForm.value.reason,
+        leave: {
+          type: leaveForm.value.type,
+          startTime: leaveForm.value.startTime,
+          endTime: leaveForm.value.endTime,
+          duration: leaveForm.value.duration,
+          reason: leaveForm.value.reason,
+          timeType: leaveForm.value.timeType,
+        },
+      };
       break;
     case 'goout':
       isValid = validateGoOutForm();
-      data = { ...goOutForm.value };
+      data = {
+        userId,
+        type: 10, // 外出类型
+        title: '外出申请',
+        reason: goOutForm.value.reason,
+        goOut: {
+          startTime: goOutForm.value.startTime,
+          endTime: goOutForm.value.endTime,
+          duration: goOutForm.value.duration,
+          reason: goOutForm.value.reason,
+        },
+      };
       break;
     case 'makecard':
       isValid = validateMakeCardForm();
-      data = { ...makeCardForm.value };
+      data = {
+        userId,
+        type: 11, // 补卡类型
+        title: '补卡申请',
+        reason: makeCardForm.value.reason,
+        makeCard: {
+          date: makeCardForm.value.date,
+          day: makeCardForm.value.day,
+          workCheckType: makeCardForm.value.workCheckType,
+          reason: makeCardForm.value.reason,
+        },
+      };
       break;
     default:
       return;
@@ -236,7 +282,7 @@ function resetForm() {
   errors.value = {};
   leaveForm.value = { type: 1, startTime: 0, endTime: 0, duration: 0, reason: '', timeType: 2 };
   goOutForm.value = { startTime: 0, endTime: 0, duration: 0, reason: '' };
-  makeCardForm.value = { date: 0, checkType: 1, reason: '' };
+  makeCardForm.value = { date: 0, day: 0, workCheckType: 1, reason: '' };
   leaveStartDate.value = '';
   leaveEndDate.value = '';
   goOutStartDate.value = '';
@@ -371,7 +417,7 @@ defineExpose({
       
       <div class="form-group">
         <label class="form-label">补卡类型 <span class="required">*</span></label>
-        <select v-model="makeCardForm.checkType" class="form-input">
+        <select v-model="makeCardForm.workCheckType" class="form-input">
           <option v-for="opt in checkTypeOptions" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </option>

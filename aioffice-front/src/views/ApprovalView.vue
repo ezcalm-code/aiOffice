@@ -78,8 +78,9 @@ async function handleApprovalClick(approval: Approval) {
 async function handleApprove(approval: Approval) {
   try {
     await approvalStore.dispose({
-      id: approval.id,
-      action: 'approve',
+      approvalId: approval.id,
+      status: 2, // APPROVED
+      reason: '',
     });
   } catch (error) {
     console.error('Failed to approve:', error);
@@ -88,10 +89,14 @@ async function handleApprove(approval: Approval) {
 
 // Handle reject action
 async function handleReject(approval: Approval) {
+  const reason = prompt('请输入拒绝原因:');
+  if (reason === null) return; // 用户取消
+  
   try {
     await approvalStore.dispose({
-      id: approval.id,
-      action: 'reject',
+      approvalId: approval.id,
+      status: 4, // REJECTED
+      reason: reason || '',
     });
   } catch (error) {
     console.error('Failed to reject:', error);
