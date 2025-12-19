@@ -39,7 +39,7 @@ describe('Auth Service', () => {
       const auth = await import('@/services/auth')
       
       const mockResponse = {
-        code: 0,
+        code: 200,
         data: {
           id: 'user-123',
           name: 'testuser',
@@ -92,7 +92,7 @@ describe('Auth Service', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00Z'))
       
       const mockResponse = {
-        code: 0,
+        code: 200,
         data: {
           id: 'user-123',
           name: 'testuser',

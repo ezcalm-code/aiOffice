@@ -28,7 +28,8 @@ export async function login(name: string, password: string): Promise<LoginRespon
   const request: LoginRequest = { name, password };
   const response = await post<LoginResponse>('/api/user/login', request);
   
-  if (response.code === 0 && response.data) {
+  // Backend returns code 200 for success
+  if (response.code === 200 && response.data) {
     const { id, name: userName, token, accessExpire } = response.data;
     
     // Store token securely
