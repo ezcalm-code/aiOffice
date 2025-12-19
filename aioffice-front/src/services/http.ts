@@ -111,9 +111,10 @@ export async function put<T>(url: string, data?: object): Promise<ApiResponse<T>
 /**
  * HTTP DELETE request
  * @param url Request URL
+ * @param config Optional config with data for request body
  */
-export async function del<T>(url: string): Promise<ApiResponse<T>> {
-  const response = await httpClient.delete<ApiResponse<T>>(url);
+export async function del<T>(url: string, config?: { data?: object }): Promise<ApiResponse<T>> {
+  const response = await httpClient.delete<ApiResponse<T>>(url, config);
   return response.data;
 }
 

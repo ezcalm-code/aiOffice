@@ -14,16 +14,15 @@ import type {
   AssignUsersRequest
 } from '../types/department';
 import { 
-  getDepartments, 
+  getDepartmentSoa, 
   getDepartmentById,
   getUserDepartment,
   createDepartment, 
   updateDepartment, 
   deleteDepartment,
-  getDepartmentMembers,
-  assignUsers,
-  removeUserFromDepartment,
-  type DepartmentListParams
+  setDepartmentUsers,
+  addDepartmentUser,
+  removeDepartmentUser
 } from '../services/api/department';
 
 export const useDepartmentStore = defineStore('department', () => {
@@ -149,15 +148,16 @@ export const useDepartmentStore = defineStore('department', () => {
   }
 
   /**
-   * Fetch departments from API
+   * Fetch departments from API (SOA endpoint returns tree structure)
    * Requirements: 6.1 - WHEN a user views the Department_Module THEN display the department tree structure
    */
-  async function fetchDepartments(params?: DepartmentListParams): Promise<void> {
+  async function fetchDepartments(): Promise<void> {
     setLoading(true);
     try {
-      const response = await getDepartments(params);
+      const response = await getDepartmentSoa();
       if (response.code === 200 && response.data) {
-        departments.value = response.data.data || [];
+        // SOA returns a single root department with children
+        departments.value = response.data.child || [response.data];
       }
     } catch (error) {
       console.error('Failed to fetch departments:', error);
@@ -277,18 +277,22 @@ export const useDepartmentStore = defineStore('department', () => {
   }
 
   /**
-   * Fetch department members
-   * Requirements: 6.3 - Department member management
+   * Set users to a department (replace all users)
+   * Requirements: 6.3 - WHEN an admin assigns users to a department THEN update the department member list
+   * Property 17: Department Member List Update
    */
-  async function fetchDepartmentMembers(depId: string): Promise<void> {
+  async function assignUsersToDepartment(data: AssignUsersRequest): Promise<boolean> {
     setLoading(true);
     try {
-      const response = await getDepartmentMembers(depId);
-      if (response.code === 200 && response.data) {
-        members.value = response.data.data || [];
+      const response = await setDepartmentUsers(data);
+      if (response.code === 200) {
+        // Refresh the department list to get updated members
+        await fetchDepartments();
+        return true;
       }
+      return false;
     } catch (error) {
-      console.error('Failed to fetch department members:', error);
+      console.error('Failed to assign users:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -296,22 +300,21 @@ export const useDepartmentStore = defineStore('department', () => {
   }
 
   /**
-   * Assign users to a department
-   * Requirements: 6.3 - WHEN an admin assigns users to a department THEN update the department member list
+   * Add user to department
+   * Requirements: 6.3 - Department member management
    * Property 17: Department Member List Update
    */
-  async function assignUsersToDepartment(data: AssignUsersRequest): Promise<boolean> {
+  async function addUserToDept(depId: string, userId: string): Promise<boolean> {
     setLoading(true);
     try {
-      const response = await assignUsers(data);
+      const response = await addDepartmentUser(depId, userId);
       if (response.code === 200) {
-        // Refresh the member list
-        await fetchDepartmentMembers(data.depId);
+        await fetchDepartments();
         return true;
       }
       return false;
     } catch (error) {
-      console.error('Failed to assign users:', error);
+      console.error('Failed to add user to department:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -326,7 +329,7 @@ export const useDepartmentStore = defineStore('department', () => {
   async function removeUserFromDept(depId: string, userId: string): Promise<boolean> {
     setLoading(true);
     try {
-      const response = await removeUserFromDepartment(depId, userId);
+      const response = await removeDepartmentUser(depId, userId);
       if (response.code === 200) {
         // Update local state - remove user from members list
         members.value = members.value.filter(m => m.userId !== userId);
@@ -409,8 +412,8 @@ export const useDepartmentStore = defineStore('department', () => {
     createNewDepartment,
     updateExistingDepartment,
     removeExistingDepartment,
-    fetchDepartmentMembers,
     assignUsersToDepartment,
+    addUserToDept,
     removeUserFromDept,
     updateMembersLocally,
     addMemberLocally,

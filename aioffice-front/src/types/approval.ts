@@ -71,9 +71,9 @@ export interface CreateMakeCardApprovalRequest {
 }
 
 export interface DisposeApprovalRequest {
-  id: string;
-  action: 'approve' | 'reject';
-  comment?: string;
+  status: number;      // 审批状态
+  reason: string;      // 审批理由
+  approvalId: string;  // 审批ID
 }
 
 // Approval type enum

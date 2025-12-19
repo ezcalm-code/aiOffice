@@ -14,7 +14,8 @@ import type {
 import type { ApiResponse } from '../../types';
 
 // API endpoints - use /api prefix which gets rewritten to /v1 by Vite proxy
-const DEPARTMENT_BASE = '/api/department';
+// Backend uses /v1/dep as the route group
+const DEPARTMENT_BASE = '/api/dep';
 
 /**
  * Department list response from API
@@ -42,14 +43,13 @@ export interface DepartmentListParams {
 }
 
 /**
- * Get department tree/list
+ * Get department SOA (tree structure with users)
  * Requirements: 6.1 - WHEN a user views the Department_Module THEN display the department tree structure
  * 
- * @param params Optional filter parameters
- * @returns Promise with department list response
+ * @returns Promise with department SOA response
  */
-export async function getDepartments(params?: DepartmentListParams): Promise<ApiResponse<DepartmentListResponse>> {
-  return get<DepartmentListResponse>(`${DEPARTMENT_BASE}/list`, params);
+export async function getDepartmentSoa(): Promise<ApiResponse<Department>> {
+  return get<Department>(`${DEPARTMENT_BASE}/soa`);
 }
 
 
@@ -109,25 +109,26 @@ export async function deleteDepartment(id: string): Promise<ApiResponse<void>> {
 }
 
 /**
- * Get department members
+ * Set department users
  * Requirements: 6.3 - WHEN an admin assigns users to a department THEN update the department member list
  * 
- * @param depId Department ID
- * @returns Promise with department members
+ * @param data Set department users request data
+ * @returns Promise with API response
  */
-export async function getDepartmentMembers(depId: string): Promise<ApiResponse<DepartmentMembersResponse>> {
-  return get<DepartmentMembersResponse>(`${DEPARTMENT_BASE}/${depId}/members`);
+export async function setDepartmentUsers(data: AssignUsersRequest): Promise<ApiResponse<void>> {
+  return post<void>(`${DEPARTMENT_BASE}/user`, data);
 }
 
 /**
- * Assign users to a department
- * Requirements: 6.3 - WHEN an admin assigns users to a department THEN update the department member list
+ * Add user to department
+ * Requirements: 6.3 - Department member management
  * 
- * @param data Assign users request data
+ * @param depId Department ID
+ * @param userId User ID to add
  * @returns Promise with API response
  */
-export async function assignUsers(data: AssignUsersRequest): Promise<ApiResponse<void>> {
-  return post<void>(`${DEPARTMENT_BASE}/assign`, data);
+export async function addDepartmentUser(depId: string, userId: string): Promise<ApiResponse<void>> {
+  return post<void>(`${DEPARTMENT_BASE}/user/add`, { depId, userId });
 }
 
 /**
@@ -138,19 +139,19 @@ export async function assignUsers(data: AssignUsersRequest): Promise<ApiResponse
  * @param userId User ID to remove
  * @returns Promise with API response
  */
-export async function removeUserFromDepartment(depId: string, userId: string): Promise<ApiResponse<void>> {
-  return del<void>(`${DEPARTMENT_BASE}/${depId}/members/${userId}`);
+export async function removeDepartmentUser(depId: string, userId: string): Promise<ApiResponse<void>> {
+  return del<void>(`${DEPARTMENT_BASE}/user/remove`, { data: { depId, userId } });
 }
 
 // Export default object with all methods
 export default {
-  getDepartments,
+  getDepartmentSoa,
   getDepartmentById,
   getUserDepartment,
   createDepartment,
   updateDepartment,
   deleteDepartment,
-  getDepartmentMembers,
-  assignUsers,
-  removeUserFromDepartment,
+  setDepartmentUsers,
+  addDepartmentUser,
+  removeDepartmentUser,
 };

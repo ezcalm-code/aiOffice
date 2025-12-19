@@ -17,11 +17,8 @@ import { ApprovalStatus } from '../types/approval';
 import { 
   getApprovals, 
   getApprovalDetail, 
-  createLeaveApproval,
-  createGoOutApproval,
-  createMakeCardApproval,
+  createApproval,
   disposeApproval,
-  cancelApproval,
   type ApprovalListParams
 } from '../services/api/approval';
 
@@ -159,7 +156,7 @@ export const useApprovalStore = defineStore('approval', () => {
   async function createLeave(data: CreateLeaveApprovalRequest): Promise<string | null> {
     setLoading(true);
     try {
-      const response = await createLeaveApproval(data);
+      const response = await createApproval(data);
       if (response.code === 200 && response.data) {
         await fetchApprovals();
         return response.data.id;
@@ -181,7 +178,7 @@ export const useApprovalStore = defineStore('approval', () => {
   async function createGoOut(data: CreateGoOutApprovalRequest): Promise<string | null> {
     setLoading(true);
     try {
-      const response = await createGoOutApproval(data);
+      const response = await createApproval(data);
       if (response.code === 200 && response.data) {
         await fetchApprovals();
         return response.data.id;
@@ -203,7 +200,7 @@ export const useApprovalStore = defineStore('approval', () => {
   async function createMakeCard(data: CreateMakeCardApprovalRequest): Promise<string | null> {
     setLoading(true);
     try {
-      const response = await createMakeCardApproval(data);
+      const response = await createApproval(data);
       if (response.code === 200 && response.data) {
         await fetchApprovals();
         return response.data.id;
@@ -227,12 +224,9 @@ export const useApprovalStore = defineStore('approval', () => {
       const response = await disposeApproval(data);
       if (response.code === 200) {
         // Update local state
-        const index = approvals.value.findIndex(a => a.id === data.id);
+        const index = approvals.value.findIndex(a => a.id === data.approvalId);
         if (index !== -1) {
-          const newStatus = data.action === 'approve' 
-            ? ApprovalStatus.APPROVED 
-            : ApprovalStatus.REJECTED;
-          approvals.value[index] = { ...approvals.value[index], status: newStatus };
+          approvals.value[index] = { ...approvals.value[index], status: data.status };
         }
         return true;
       }
@@ -246,12 +240,17 @@ export const useApprovalStore = defineStore('approval', () => {
   }
 
   /**
-   * Cancel an approval
+   * Cancel an approval (update status to cancelled via dispose)
    */
   async function cancel(id: string): Promise<boolean> {
     setLoading(true);
     try {
-      const response = await cancelApproval(id);
+      // Use dispose with cancelled status
+      const response = await disposeApproval({ 
+        approvalId: id, 
+        status: ApprovalStatus.CANCELLED,
+        reason: ''
+      });
       if (response.code === 200) {
         // Update local state
         const index = approvals.value.findIndex(a => a.id === id);

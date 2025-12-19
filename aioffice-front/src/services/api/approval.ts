@@ -59,36 +59,14 @@ export async function getApprovalDetail(id: string): Promise<ApiResponse<Approva
 
 
 /**
- * Create a leave approval
- * Requirements: 5.1 - WHEN a user creates a leave approval THEN collect leave type, times, duration, reason
+ * Create an approval (unified endpoint for all types)
+ * Requirements: 5.1, 5.2, 5.3 - Create approval with type-specific data
  * 
- * @param data Leave approval creation data
+ * @param data Approval creation data (leave, goOut, or makeCard)
  * @returns Promise with created approval ID
  */
-export async function createLeaveApproval(data: CreateLeaveApprovalRequest): Promise<ApiResponse<{ id: string }>> {
-  return post<{ id: string }>(`${APPROVAL_BASE}/leave`, data);
-}
-
-/**
- * Create a go-out approval
- * Requirements: 5.2 - WHEN a user creates an out-of-office approval THEN collect times, duration, reason
- * 
- * @param data Go-out approval creation data
- * @returns Promise with created approval ID
- */
-export async function createGoOutApproval(data: CreateGoOutApprovalRequest): Promise<ApiResponse<{ id: string }>> {
-  return post<{ id: string }>(`${APPROVAL_BASE}/goout`, data);
-}
-
-/**
- * Create a make-card approval
- * Requirements: 5.3 - WHEN a user creates a make-up card approval THEN collect date, check type, reason
- * 
- * @param data Make-card approval creation data
- * @returns Promise with created approval ID
- */
-export async function createMakeCardApproval(data: CreateMakeCardApprovalRequest): Promise<ApiResponse<{ id: string }>> {
-  return post<{ id: string }>(`${APPROVAL_BASE}/makecard`, data);
+export async function createApproval(data: CreateLeaveApprovalRequest | CreateGoOutApprovalRequest | CreateMakeCardApprovalRequest): Promise<ApiResponse<{ id: string }>> {
+  return post<{ id: string }>(APPROVAL_BASE, data);
 }
 
 /**
@@ -102,23 +80,10 @@ export async function disposeApproval(data: DisposeApprovalRequest): Promise<Api
   return put<void>(`${APPROVAL_BASE}/dispose`, data);
 }
 
-/**
- * Cancel an approval
- * 
- * @param id Approval ID to cancel
- * @returns Promise with API response
- */
-export async function cancelApproval(id: string): Promise<ApiResponse<void>> {
-  return put<void>(`${APPROVAL_BASE}/cancel`, { id });
-}
-
 // Export default object with all methods
 export default {
   getApprovals,
   getApprovalDetail,
-  createLeaveApproval,
-  createGoOutApproval,
-  createMakeCardApproval,
+  createApproval,
   disposeApproval,
-  cancelApproval,
 };
