@@ -6,6 +6,8 @@
 
 import { ref, onMounted, computed } from 'vue';
 import { useApprovalStore } from '../stores/approval';
+import { useUserStore } from '../stores/user';
+import { getUser } from '../utils/storage';
 import ApprovalList from '../components/approval/ApprovalList.vue';
 import ApprovalForm from '../components/approval/ApprovalForm.vue';
 import ApprovalCard from '../components/approval/ApprovalCard.vue';
@@ -19,6 +21,7 @@ import type {
 import { formatDateTime } from '../utils/date';
 
 const approvalStore = useApprovalStore();
+const userStore = useUserStore();
 
 // View state
 const showCreateForm = ref(false);
@@ -30,9 +33,11 @@ const approvals = computed(() => approvalStore.approvals);
 const loading = computed(() => approvalStore.loading);
 const currentApproval = computed(() => approvalStore.currentApproval);
 
-// Fetch approvals on mount
+// Fetch approvals on mount - 传入当前用户ID，只获取与当前用户相关的审批
 onMounted(async () => {
-  await approvalStore.fetchApprovals();
+  const storedUser = getUser();
+  const userId = userStore.id || storedUser?.id || '';
+  await approvalStore.fetchApprovals({ userId });
 });
 
 // Handle create button click

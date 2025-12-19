@@ -158,7 +158,8 @@ export const useApprovalStore = defineStore('approval', () => {
     try {
       const response = await createApproval(data);
       if (response.code === 200 && response.data) {
-        await fetchApprovals();
+        // 刷新列表时传入userId
+        await fetchApprovals({ userId: data.userId });
         return response.data.id;
       }
       return null;
@@ -180,7 +181,8 @@ export const useApprovalStore = defineStore('approval', () => {
     try {
       const response = await createApproval(data);
       if (response.code === 200 && response.data) {
-        await fetchApprovals();
+        // 刷新列表时传入userId
+        await fetchApprovals({ userId: data.userId });
         return response.data.id;
       }
       return null;
@@ -202,7 +204,8 @@ export const useApprovalStore = defineStore('approval', () => {
     try {
       const response = await createApproval(data);
       if (response.code === 200 && response.data) {
-        await fetchApprovals();
+        // 刷新列表时传入userId
+        await fetchApprovals({ userId: data.userId });
         return response.data.id;
       }
       return null;
