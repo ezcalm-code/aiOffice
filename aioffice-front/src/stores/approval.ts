@@ -87,15 +87,25 @@ export const useApprovalStore = defineStore('approval', () => {
   const isLoading = computed(() => loading.value);
 
   /**
-   * Get approvals with status display info
+   * Get approvals with status display info, sorted by status
    * Property 13: Approval Status Display
+   * 未开始(0)和进行中(1)排前面，已通过(2)/已撤销(3)/已拒绝(4)排后面
    */
   const approvalsWithStatus = computed(() => {
-    return approvals.value.map(approval => ({
-      ...approval,
-      statusDisplay: getStatusDisplay(approval.status),
-      typeLabel: getApprovalTypeLabel(approval.type),
-    }));
+    return approvals.value
+      .map(approval => ({
+        ...approval,
+        statusDisplay: getStatusDisplay(approval.status),
+        typeLabel: getApprovalTypeLabel(approval.type),
+      }))
+      .sort((a, b) => {
+        // 未开始(0)和进行中(1)排前面
+        const isPendingA = a.status === 0 || a.status === 1;
+        const isPendingB = b.status === 0 || b.status === 1;
+        if (isPendingA && !isPendingB) return -1;
+        if (!isPendingA && isPendingB) return 1;
+        return 0;
+      });
   });
 
   /**

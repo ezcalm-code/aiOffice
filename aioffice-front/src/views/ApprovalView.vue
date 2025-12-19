@@ -28,8 +28,8 @@ const showCreateForm = ref(false);
 const showDetail = ref(false);
 const selectedApproval = ref<Approval | null>(null);
 
-// Computed
-const approvals = computed(() => approvalStore.approvals);
+// Computed - 使用排序后的 approvalsWithStatus
+const approvals = computed(() => approvalStore.approvalsWithStatus);
 const loading = computed(() => approvalStore.loading);
 const currentApproval = computed(() => approvalStore.currentApproval);
 
