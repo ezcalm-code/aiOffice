@@ -150,7 +150,7 @@ async function uploadPendingFile(): Promise<void> {
       uploadProgress.value = progress;
     });
 
-    if (response.code === 0 && response.data) {
+    if (response.code === 200 && response.data) {
       if (isKnowledgeMode) {
         chatStore.addKnowledgeResponse(`文件 "${file.name}" 已成功上传到知识库！您现在可以查询相关内容。`);
       } else {
