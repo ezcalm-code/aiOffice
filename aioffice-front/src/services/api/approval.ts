@@ -13,8 +13,8 @@ import type {
 } from '../../types/approval';
 import type { ApiResponse } from '../../types';
 
-// API endpoints
-const APPROVAL_BASE = '/v1/approval';
+// API endpoints - use /api prefix which gets rewritten to /v1 by Vite proxy
+const APPROVAL_BASE = '/api/approval';
 
 /**
  * Approval list response from API

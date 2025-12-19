@@ -138,7 +138,7 @@ export const useTodoStore = defineStore('todo', () => {
     setLoading(true);
     try {
       const response = await getTodos(params);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         todos.value = response.data.data || [];
       }
     } catch (error) {
@@ -156,7 +156,7 @@ export const useTodoStore = defineStore('todo', () => {
     setLoading(true);
     try {
       const response = await getTodoById(id);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         currentTodo.value = response.data;
         return response.data;
       }
@@ -178,7 +178,7 @@ export const useTodoStore = defineStore('todo', () => {
     setLoading(true);
     try {
       const response = await createTodo(data);
-      if (response.code === 0 && response.data) {
+      if (response.code === 200 && response.data) {
         // Refresh the todo list to include the new item
         await fetchTodos();
         return response.data.id;
@@ -202,7 +202,7 @@ export const useTodoStore = defineStore('todo', () => {
     setLoading(true);
     try {
       const response = await updateTodo(data);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Update local state
         const index = todos.value.findIndex(t => t.id === data.id);
         if (index !== -1) {
@@ -226,7 +226,7 @@ export const useTodoStore = defineStore('todo', () => {
     setLoading(true);
     try {
       const response = await deleteTodo(id);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Remove from local state
         todos.value = todos.value.filter(t => t.id !== id);
         return true;
@@ -249,7 +249,7 @@ export const useTodoStore = defineStore('todo', () => {
     setLoading(true);
     try {
       const response = await finishTodo(userId, todoId);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Update local state - mark as completed (status = 1)
         const index = todos.value.findIndex(t => t.id === todoId);
         if (index !== -1) {
@@ -276,7 +276,7 @@ export const useTodoStore = defineStore('todo', () => {
     setLoading(true);
     try {
       const response = await addTodoRecord(data);
-      if (response.code === 0) {
+      if (response.code === 200) {
         // Refresh the specific todo to get updated records
         await fetchTodoById(data.todoId);
         return true;

@@ -13,8 +13,8 @@ import type {
 } from '../../types/department';
 import type { ApiResponse } from '../../types';
 
-// API endpoints
-const DEPARTMENT_BASE = '/v1/department';
+// API endpoints - use /api prefix which gets rewritten to /v1 by Vite proxy
+const DEPARTMENT_BASE = '/api/department';
 
 /**
  * Department list response from API

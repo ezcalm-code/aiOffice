@@ -20,7 +20,18 @@ export default defineConfig({
       },
       '/ws': {
         target: 'ws://localhost:9001',
-        ws: true
+        ws: true,
+        rewrite: (path) => path.replace(/^\/ws/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReqWs', (proxyReq, req) => {
+            // 从 URL 参数中获取 token 并添加到 websocket header
+            const url = new URL(req.url || '', `http://${req.headers.host}`)
+            const token = url.searchParams.get('token')
+            if (token) {
+              proxyReq.setHeader('websocket', token)
+            }
+          })
+        }
       }
     }
   }

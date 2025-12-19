@@ -13,8 +13,8 @@ import type {
 } from '../../types/todo';
 import type { ApiResponse } from '../../types';
 
-// API endpoints
-const TODO_BASE = '/v1/todo';
+// API endpoints - use /api prefix which gets rewritten to /v1 by Vite proxy
+const TODO_BASE = '/api/todo';
 
 /**
  * Todo list response from API

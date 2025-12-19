@@ -6,8 +6,9 @@
 import type { ChatMessage, ConnectionStatus } from '../types/chat';
 import { getToken } from './auth';
 
-// WebSocket server URL - defaults to localhost:9001 for development
-const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:9001';
+// WebSocket server URL - use Vite proxy in development to add auth header
+// In production, set VITE_WS_URL to the actual WebSocket server URL
+const WS_BASE_URL = import.meta.env.VITE_WS_URL || '';
 
 // Maximum reconnection attempts
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -60,8 +61,12 @@ class WebSocketClient {
     this.updateConnectionStatus('connecting');
 
     try {
-      // Connect with token as query parameter
-      const wsUrl = `${WS_BASE_URL}/ws?token=${encodeURIComponent(this.token)}`;
+      // Connect through Vite proxy which adds the websocket header
+      // In development: /ws/ws?token=xxx -> proxy adds header -> ws://localhost:9001/ws
+      // In production: use VITE_WS_URL directly
+      const wsUrl = WS_BASE_URL 
+        ? `${WS_BASE_URL}/ws?token=${encodeURIComponent(this.token)}`
+        : `/ws/ws?token=${encodeURIComponent(this.token)}`;
       this.socket = new WebSocket(wsUrl);
 
       this.socket.onopen = this.handleOpen.bind(this);
