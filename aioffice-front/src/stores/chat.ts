@@ -19,7 +19,8 @@ import { queryKnowledge, parseKnowledgeResponse } from '../services/api/knowledg
 export const useChatStore = defineStore('chat', () => {
   // State
   const messages = ref<ChatMessage[]>([]);
-  const aiMessages = ref<AIChatMessage[]>([]);
+  const aiMessages = ref<AIChatMessage[]>([]);  // AI助手消息
+  const knowledgeMessages = ref<AIChatMessage[]>([]);  // 知识库消息
   const connectionStatus = ref<ConnectionStatus>('disconnected');
   const currentConversation = ref<string | null>(null);
   const loading = ref<boolean>(false);
@@ -220,6 +221,42 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   /**
+   * Clear knowledge messages
+   */
+  function clearKnowledgeMessages(): void {
+    knowledgeMessages.value = [];
+  }
+
+  /**
+   * Add knowledge user message
+   */
+  function sendKnowledgeMessage(content: string): AIChatMessage {
+    const userMessage: AIChatMessage = {
+      id: generateMessageId(),
+      role: 'user',
+      content,
+      timestamp: Date.now(),
+    };
+    knowledgeMessages.value.push(userMessage);
+    return userMessage;
+  }
+
+  /**
+   * Add knowledge assistant response
+   */
+  function addKnowledgeResponse(content: string, isLoading = false): AIChatMessage {
+    const assistantMessage: AIChatMessage = {
+      id: generateMessageId(),
+      role: 'assistant',
+      content,
+      timestamp: Date.now(),
+      loading: isLoading,
+    };
+    knowledgeMessages.value.push(assistantMessage);
+    return assistantMessage;
+  }
+
+  /**
    * Generate a unique message ID
    */
   function generateMessageId(): string {
@@ -237,8 +274,8 @@ export const useChatStore = defineStore('chat', () => {
   async function sendKnowledgeQuery(query: string): Promise<KnowledgeQueryResult | null> {
     if (!query.trim()) return null;
 
-    // Add user message
-    sendAIMessage(query);
+    // Add user message to knowledge messages (not AI messages)
+    sendKnowledgeMessage(query);
 
     // Set loading state
     // Requirements: 7.4 - WHILE Knowledge_Base is processing a query THEN display loading state
@@ -264,15 +301,15 @@ export const useChatStore = defineStore('chat', () => {
           });
         }
 
-        addAIResponse(responseContent);
+        addKnowledgeResponse(responseContent);
         return result;
       } else {
-        addAIResponse('抱歉，未能找到相关信息。请尝试其他问题。');
+        addKnowledgeResponse('抱歉，未能找到相关信息。请尝试其他问题。');
         return null;
       }
     } catch (error) {
       console.error('Knowledge query error:', error);
-      addAIResponse('查询知识库时出现错误，请稍后重试。');
+      addKnowledgeResponse('查询知识库时出现错误，请稍后重试。');
       return null;
     } finally {
       setLoading(false);
@@ -283,6 +320,7 @@ export const useChatStore = defineStore('chat', () => {
     // State
     messages,
     aiMessages,
+    knowledgeMessages,
     connectionStatus,
     currentConversation,
     loading,
@@ -306,6 +344,9 @@ export const useChatStore = defineStore('chat', () => {
     setCurrentConversation,
     clearMessages,
     clearAIMessages,
+    clearKnowledgeMessages,
+    sendKnowledgeMessage,
+    addKnowledgeResponse,
     sendKnowledgeQuery,
   };
 });

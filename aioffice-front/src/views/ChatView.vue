@@ -22,13 +22,17 @@ const uploadProgress = ref(0);
 const isUploading = ref(false);
 
 // Computed properties
-const aiMessages = computed(() => chatStore.aiMessages);
 const connectionStatus = computed(() => chatStore.connectionStatus);
 const isLoading = computed(() => chatStore.isLoading);
 const currentUserId = computed(() => userStore.id);
 
 // Chat mode: 'ai' for general AI chat, 'knowledge' for knowledge base queries
 const chatMode = ref<'ai' | 'knowledge'>('ai');
+
+// 根据模式显示不同的消息列表
+const currentMessages = computed(() => {
+  return chatMode.value === 'ai' ? chatStore.aiMessages : chatStore.knowledgeMessages;
+});
 
 /**
  * Toggle chat mode between AI and Knowledge base
@@ -182,7 +186,7 @@ onUnmounted(() => {
 
     <div class="chat-main">
       <ChatWindow
-        :messages="aiMessages"
+        :messages="currentMessages"
         :current-user-id="currentUserId"
         :connection-status="connectionStatus"
         :loading="isLoading"
