@@ -6,6 +6,7 @@
 
 import { ref, computed, watch } from 'vue';
 import type { Todo, CreateTodoRequest, UpdateTodoRequest } from '../../types/todo';
+import { useUserStore } from '../../stores/user';
 
 interface Props {
   todo?: Todo | null;
@@ -21,6 +22,9 @@ const emit = defineEmits<{
   (e: 'submit', data: CreateTodoRequest | UpdateTodoRequest): void;
   (e: 'cancel'): void;
 }>();
+
+// Get current user info
+const userStore = useUserStore();
 
 // Form data
 const title = ref('');
@@ -97,10 +101,12 @@ function handleSubmit() {
     emit('submit', updateData);
   } else {
     const createData: CreateTodoRequest = {
+      creatorId: userStore.id,
+      creatorName: userStore.name,
       title: title.value.trim(),
       desc: desc.value.trim(),
       deadlineAt: deadlineTimestamp,
-      executeIds: executeIds.value,
+      executeIds: executeIds.value.length > 0 ? executeIds.value : [userStore.id],
     };
     emit('submit', createData);
   }
