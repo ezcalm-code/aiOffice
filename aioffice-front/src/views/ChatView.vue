@@ -72,10 +72,10 @@ async function handleSendMessage(content: string): Promise<void> {
     };
 
     // Send to backend
-    const response = await post<AIChatResponse>('/api/chat/ai', request);
+    const response = await post<AIChatResponse>('/api/chat', request);
 
     // Requirements: 2.2 - WHEN AI_Chat receives a response THEN render in chat window
-    if (response.code === 0 && response.data) {
+    if (response.code === 200 && response.data) {
       const aiResponse = response.data;
       let responseContent: string;
 

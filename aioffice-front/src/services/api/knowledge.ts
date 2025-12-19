@@ -59,7 +59,7 @@ export async function queryKnowledge(query: string): Promise<ApiResponse<AIChatR
     relationId: 0,
   };
   
-  return post<AIChatResponse>('/api/chat/ai', request);
+  return post<AIChatResponse>('/api/chat', request);
 }
 
 /**
