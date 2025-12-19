@@ -7,6 +7,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useTodoStore } from '../stores/todo';
 import { useUserStore } from '../stores/user';
+import { getUser } from '../utils/storage';
 import TodoList from '../components/todo/TodoList.vue';
 import TodoForm from '../components/todo/TodoForm.vue';
 import { AppLayout } from '../components/common';
@@ -41,9 +42,17 @@ const statusOptions = [
   { value: 2, label: '已取消' },
 ];
 
-// Load todos on mount
+// Load todos on mount - 传入当前用户ID，只获取与当前用户相关的待办
 onMounted(async () => {
-  await todoStore.fetchTodos();
+  const storedUser = getUser();
+  const userId = userStore.id || storedUser?.id || '';
+  console.log('TodoView - userId:', userId, 'userStore.id:', userStore.id, 'storedUser:', storedUser);
+  if (userId) {
+    await todoStore.fetchTodos({ userId });
+  } else {
+    console.warn('No userId found, fetching all todos');
+    await todoStore.fetchTodos();
+  }
 });
 
 

@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router';
 import { useUserStore } from '../stores/user';
 import { useTodoStore } from '../stores/todo';
 import { useApprovalStore } from '../stores/approval';
+import { getUser } from '../utils/storage';
 import { AppLayout, LoadingSpinner } from '../components/common';
 
 const router = useRouter();
@@ -83,9 +84,11 @@ function navigateTo(path: string): void {
 async function loadDashboardData(): Promise<void> {
   loading.value = true;
   try {
+    const storedUser = getUser();
+    const userId = userStore.id || storedUser?.id || '';
     await Promise.all([
-      todoStore.fetchTodos(),
-      approvalStore.fetchApprovals(),
+      todoStore.fetchTodos(userId ? { userId } : undefined),
+      approvalStore.fetchApprovals(userId ? { userId } : undefined),
     ]);
   } catch (error) {
     console.error('Failed to load dashboard data:', error);

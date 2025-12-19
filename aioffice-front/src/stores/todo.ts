@@ -179,8 +179,8 @@ export const useTodoStore = defineStore('todo', () => {
     try {
       const response = await createTodo(data);
       if (response.code === 200 && response.data) {
-        // Refresh the todo list to include the new item
-        await fetchTodos();
+        // Refresh the todo list to include the new item - 传入userId只获取当前用户的待办
+        await fetchTodos({ userId: data.creatorId });
         return response.data.id;
       }
       return null;

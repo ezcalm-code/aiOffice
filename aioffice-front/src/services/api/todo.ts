@@ -44,7 +44,7 @@ export interface TodoListParams {
  * @returns Promise with todo list response
  */
 export async function getTodos(params?: TodoListParams): Promise<ApiResponse<TodoListResponse>> {
-  return get<TodoListResponse>(`${TODO_BASE}/list`, params);
+  return post<TodoListResponse>(`${TODO_BASE}/list`, params || {});
 }
 
 /**
