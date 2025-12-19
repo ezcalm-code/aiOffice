@@ -43,7 +43,17 @@ export interface ApprovalListParams {
  * @returns Promise with approval list response
  */
 export async function getApprovals(params?: ApprovalListParams): Promise<ApiResponse<ApprovalListResponse>> {
-  return get<ApprovalListResponse>(`${APPROVAL_BASE}/list`, params);
+  // 后端是 POST /list，不是 GET
+  // 过滤掉空值参数，避免传空字符串导致后端报错
+  const cleanParams: Record<string, unknown> = {};
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        cleanParams[key] = value;
+      }
+    });
+  }
+  return post<ApprovalListResponse>(`${APPROVAL_BASE}/list`, Object.keys(cleanParams).length > 0 ? cleanParams : {});
 }
 
 /**
