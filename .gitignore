@@ -62,3 +62,4 @@ upload/
 *.sh
 /uploadFile/
 员工手册.md
+/.kiro/

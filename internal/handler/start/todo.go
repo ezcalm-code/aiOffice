@@ -29,7 +29,7 @@ func (h *Todo) InitRegister(engine *gin.Engine) {
 	g.DELETE("/:id", h.Delete)
 	g.POST("/finish", h.Finish)
 	g.POST("/record", h.CreateRecord)
-	g.GET("/list", h.List)
+	g.POST("/list", h.List)
 }
 
 func (h *Todo) Info(ctx *gin.Context) {
