@@ -9,6 +9,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useChatStore } from '../stores/chat';
 import { useUserStore } from '../stores/user';
 import ChatWindow from '../components/chat/ChatWindow.vue';
+import { AppLayout } from '../components/common';
 import { post, upload } from '../services/http';
 import { uploadKnowledgeFile, validateKnowledgeFileType, ALLOWED_FILE_EXTENSIONS } from '../services/api/knowledge';
 import type { AIChatRequest, AIChatResponse, AIChatMessage } from '../types/chat';
@@ -159,9 +160,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="chat-view">
-    <!-- Mode Toggle -->
-    <div class="mode-toggle">
+  <AppLayout>
+    <div class="chat-view">
+      <!-- Mode Toggle -->
+      <div class="mode-toggle">
       <button 
         class="mode-btn"
         :class="{ active: chatMode === 'ai' }"
@@ -191,16 +193,17 @@ onUnmounted(() => {
       />
     </div>
 
-    <!-- Upload Progress Overlay -->
-    <div v-if="isUploading" class="upload-overlay">
-      <div class="upload-progress">
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: `${uploadProgress}%` }"></div>
+      <!-- Upload Progress Overlay -->
+      <div v-if="isUploading" class="upload-overlay">
+        <div class="upload-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: `${uploadProgress}%` }"></div>
+          </div>
+          <div class="progress-text">上传中... {{ uploadProgress }}%</div>
         </div>
-        <div class="progress-text">上传中... {{ uploadProgress }}%</div>
       </div>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 <style scoped>

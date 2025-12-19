@@ -9,6 +9,7 @@ import { useTodoStore } from '../stores/todo';
 import { useUserStore } from '../stores/user';
 import TodoList from '../components/todo/TodoList.vue';
 import TodoForm from '../components/todo/TodoForm.vue';
+import { AppLayout } from '../components/common';
 import type { Todo, TodoFilters, CreateTodoRequest, UpdateTodoRequest, AddTodoRecordRequest } from '../types/todo';
 
 const todoStore = useTodoStore();
@@ -184,9 +185,10 @@ function formatDateTime(timestamp: number): string {
 
 
 <template>
-  <div class="todo-view">
-    <!-- Header -->
-    <div class="view-header">
+  <AppLayout>
+    <div class="todo-view">
+      <!-- Header -->
+      <div class="view-header">
       <h1 class="view-title">待办事项</h1>
       <button class="btn btn-primary" @click="showCreateForm">
         + 新建待办
@@ -309,25 +311,26 @@ function formatDateTime(timestamp: number): string {
       </div>
     </div>
     
-    <!-- Add Record Modal -->
-    <div v-if="showRecordForm" class="modal-overlay" @click.self="closeRecordForm">
-      <div class="modal-content record-modal">
-        <h3>添加操作记录</h3>
-        <textarea 
-          v-model="recordContent" 
-          class="record-textarea"
-          placeholder="请输入记录内容"
-          rows="4"
-        ></textarea>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" @click="closeRecordForm">取消</button>
-          <button class="btn btn-primary" @click="handleAddRecord" :disabled="!recordContent.trim()">
-            添加
-          </button>
+      <!-- Add Record Modal -->
+      <div v-if="showRecordForm" class="modal-overlay" @click.self="closeRecordForm">
+        <div class="modal-content record-modal">
+          <h3>添加操作记录</h3>
+          <textarea 
+            v-model="recordContent" 
+            class="record-textarea"
+            placeholder="请输入记录内容"
+            rows="4"
+          ></textarea>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeRecordForm">取消</button>
+            <button class="btn btn-primary" @click="handleAddRecord" :disabled="!recordContent.trim()">
+              添加
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 

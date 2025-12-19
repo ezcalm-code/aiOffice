@@ -9,6 +9,7 @@ import { useApprovalStore } from '../stores/approval';
 import ApprovalList from '../components/approval/ApprovalList.vue';
 import ApprovalForm from '../components/approval/ApprovalForm.vue';
 import ApprovalCard from '../components/approval/ApprovalCard.vue';
+import { AppLayout } from '../components/common';
 import type { 
   Approval,
   CreateLeaveApprovalRequest,
@@ -121,8 +122,9 @@ function formatTime(timestamp: number): string {
 </script>
 
 <template>
-  <div class="approval-view">
-    <div class="view-header">
+  <AppLayout>
+    <div class="approval-view">
+      <div class="view-header">
       <h1 class="view-title">审批管理</h1>
       <button class="btn btn-primary" @click="handleCreate">
         新建审批
@@ -234,19 +236,20 @@ function formatTime(timestamp: number): string {
         </div>
       </div>
 
-      <!-- Approval List -->
-      <div v-else class="list-section">
-        <ApprovalList
-          :approvals="approvals"
-          :loading="loading"
-          @click="handleApprovalClick"
-          @approve="handleApprove"
-          @reject="handleReject"
-          @cancel="handleCancel"
-        />
+        <!-- Approval List -->
+        <div v-else class="list-section">
+          <ApprovalList
+            :approvals="approvals"
+            :loading="loading"
+            @click="handleApprovalClick"
+            @approve="handleApprove"
+            @reject="handleReject"
+            @cancel="handleCancel"
+          />
+        </div>
       </div>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 

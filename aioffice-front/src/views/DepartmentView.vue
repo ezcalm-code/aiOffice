@@ -8,6 +8,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useDepartmentStore } from '../stores/department';
 import DeptTree from '../components/department/DeptTree.vue';
 import DeptForm from '../components/department/DeptForm.vue';
+import { AppLayout } from '../components/common';
 import type { 
   Department, 
   DepartmentUser,
@@ -166,9 +167,10 @@ function getDepartmentPathText(dept: Department): string {
 
 
 <template>
-  <div class="department-view">
-    <!-- Header -->
-    <div class="view-header">
+  <AppLayout>
+    <div class="department-view">
+      <!-- Header -->
+      <div class="view-header">
       <h1 class="view-title">部门管理</h1>
       <button class="btn btn-primary" @click="showCreateForm">
         + 新建部门
@@ -260,20 +262,21 @@ function getDepartmentPathText(dept: Department): string {
       </div>
     </div>
     
-    <!-- Create/Edit Form Modal -->
-    <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
-      <div class="modal-content">
-        <DeptForm
-          :department="selectedDepartment"
-          :parent-department="parentDepartment"
-          :departments="departments"
-          :mode="formMode"
-          @submit="handleFormSubmit"
-          @cancel="closeForm"
-        />
+      <!-- Create/Edit Form Modal -->
+      <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
+        <div class="modal-content">
+          <DeptForm
+            :department="selectedDepartment"
+            :parent-department="parentDepartment"
+            :departments="departments"
+            :mode="formMode"
+            @submit="handleFormSubmit"
+            @cancel="closeForm"
+          />
+        </div>
       </div>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 

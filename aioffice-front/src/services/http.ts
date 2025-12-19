@@ -3,12 +3,13 @@
  * Requirements: 1.4 - JWT Token inclusion in all API request headers
  */
 
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import type { ApiResponse, ApiError } from '../types';
 import { getToken, removeToken } from '../utils/storage';
 
-// API base URL - can be configured via environment variables
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+// API base URL - use empty string to leverage Vite proxy, or full URL for production
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const TIMEOUT = 30000; // 30 seconds
 
 /**
