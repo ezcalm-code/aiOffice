@@ -113,6 +113,29 @@ go build -o aiOffice.exe .
 └── main.go
 ```
 
+## 前端
+
+前端项目位于 `aioffice-front` 目录，基于 Vue 3 + Vite + Element Plus。
+
+### 运行
+
+```bash
+cd aioffice-front
+
+# 安装依赖
+npm install
+
+# 开发模式
+npm run dev
+
+# 构建
+npm run build
+```
+
+服务启动后：
+- 开发服务器: `http://localhost:5173`
+- 构建产物: `aioffice-front/dist`
+
 ## License
 
 MIT
