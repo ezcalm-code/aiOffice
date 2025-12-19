@@ -58,14 +58,24 @@ export const useTodoStore = defineStore('todo', () => {
 
 
   /**
-   * Get todos with deadline warning flag
+   * Get todos with deadline warning flag, sorted by status
    * Requirements: 4.6 - Highlight todos with approaching deadlines
+   * 待完成的放前面，已完成/已取消的放后面
    */
   const todosWithWarning = computed(() => {
-    return todos.value.map(todo => ({
-      ...todo,
-      hasDeadlineWarning: isDeadlineApproaching(todo),
-    }));
+    return todos.value
+      .map(todo => ({
+        ...todo,
+        hasDeadlineWarning: isDeadlineApproaching(todo),
+      }))
+      .sort((a, b) => {
+        // 待完成(0或undefined)排前面，已完成(1)和已取消(2)排后面
+        const statusA = a.todoStatus ?? 0;
+        const statusB = b.todoStatus ?? 0;
+        if (statusA === 0 && statusB !== 0) return -1;
+        if (statusA !== 0 && statusB === 0) return 1;
+        return 0;
+      });
   });
 
   /**
@@ -74,7 +84,7 @@ export const useTodoStore = defineStore('todo', () => {
    * Property 10: Todo Filter Correctness
    */
   const filteredTodos = computed(() => {
-    return filterTodos(todos.value, filters.value);
+    return filterTodos(todosWithWarning.value, filters.value);
   });
 
   /**
@@ -87,9 +97,12 @@ export const useTodoStore = defineStore('todo', () => {
    */
   function filterTodos(todoList: Todo[], filterCriteria: TodoFilters): Todo[] {
     return todoList.filter(todo => {
-      // Filter by status
-      if (filterCriteria.status !== undefined && todo.todoStatus !== filterCriteria.status) {
-        return false;
+      // Filter by status - 待完成的 todoStatus 可能是 undefined 或 0
+      if (filterCriteria.status !== undefined) {
+        const todoStatus = todo.todoStatus ?? 0; // undefined 视为待完成(0)
+        if (todoStatus !== filterCriteria.status) {
+          return false;
+        }
       }
       
       // Filter by start date

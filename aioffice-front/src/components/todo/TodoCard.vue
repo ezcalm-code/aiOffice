@@ -33,7 +33,7 @@ const statusText = computed(() => {
     case 0: return '待处理';
     case 1: return '已完成';
     case 2: return '已取消';
-    default: return '未知';
+    default: return '待完成';
   }
 });
 
