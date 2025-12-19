@@ -32,7 +32,7 @@ Tlog:
 #LangChain
 LangChain:
   Url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-  ApiKey: sk-39a6e4c977e34d478a59e608d5ea785d
+  ApiKey: 
 
 #上传文件
 Upload:

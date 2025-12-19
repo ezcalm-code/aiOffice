@@ -13,6 +13,7 @@ export interface Department {
   leader: string;
   count: number;
   child: Department[];
+  users?: DepartmentUser[];  // SOA接口返回的用户列表
 }
 
 export interface DepartmentUser {

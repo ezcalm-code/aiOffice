@@ -29,7 +29,7 @@ const newUserId = ref('');
 
 // Computed properties
 const departments = computed(() => departmentStore.departments);
-const members = computed(() => departmentStore.members);
+const members = computed(() => departmentStore.currentDepartment?.users || []);
 const loading = computed(() => departmentStore.isLoading);
 const currentDepartment = computed(() => departmentStore.currentDepartment);
 
@@ -42,7 +42,6 @@ onMounted(async () => {
 async function handleSelectDepartment(dept: Department) {
   selectedDepartment.value = dept;
   await departmentStore.fetchDepartmentById(dept.id);
-  await departmentStore.fetchDepartmentMembers(dept.id);
   showMemberPanel.value = true;
 }
 
@@ -136,10 +135,9 @@ async function handleAddUser() {
   if (!selectedDepartment.value || !newUserId.value.trim()) return;
   
   try {
-    await departmentStore.assignUsersToDepartment({
-      depId: selectedDepartment.value.id,
-      userIds: [newUserId.value.trim()],
-    });
+    await departmentStore.addUserToDept(selectedDepartment.value.id, newUserId.value.trim());
+    // Refresh department info to get updated users
+    await departmentStore.fetchDepartmentById(selectedDepartment.value.id);
     newUserId.value = '';
   } catch (error) {
     console.error('Failed to add user:', error);
@@ -153,6 +151,8 @@ async function handleRemoveUser(user: DepartmentUser) {
   
   try {
     await departmentStore.removeUserFromDept(selectedDepartment.value.id, user.userId);
+    // Refresh department info to get updated users
+    await departmentStore.fetchDepartmentById(selectedDepartment.value.id);
   } catch (error) {
     console.error('Failed to remove user:', error);
   }
