@@ -17,9 +17,10 @@ type Config struct {
 	}
 
 	Asynq struct {
-		Enabled     bool `yaml:"Enabled"`     // 是否启用
-		Concurrency int  `yaml:"Concurrency"` // Worker 并发数
-		RetryMax    int  `yaml:"RetryMax"`    // 最大重试次数
+		Enabled     bool   `yaml:"Enabled"`     // 是否启用
+		Concurrency int    `yaml:"Concurrency"` // Worker 并发数
+		RetryMax    int    `yaml:"RetryMax"`    // 最大重试次数
+		MonitorAddr string `yaml:"MonitorAddr"` // 监控面板地址
 	}
 
 	Mongo struct {

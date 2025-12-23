@@ -37,6 +37,7 @@ type ServiceContext struct {
 	AsynqClient    *asynqx.Client
 	AsynqServer    *asynqx.Server
 	AsynqScheduler *asynqx.Scheduler
+	AsynqMonitor   *asynqx.Monitor
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -104,6 +105,13 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 			c.Redis.Addr,
 			c.Redis.Password,
 			c.Redis.DB,
+			c.Asynq.Enabled,
+		),
+		AsynqMonitor: asynqx.NewMonitor(
+			c.Redis.Addr,
+			c.Redis.Password,
+			c.Redis.DB,
+			c.Asynq.MonitorAddr,
 			c.Asynq.Enabled,
 		),
 	}

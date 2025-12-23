@@ -7,8 +7,10 @@ require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/websocket v1.5.3
+	github.com/hibiken/asynq v0.25.1
 	github.com/nguyenthenguyen/docx v0.0.0-20230621112118-9c8e795a11db
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_golang v1.23.2
 	github.com/spf13/viper v1.21.0
 	github.com/swaggo/swag v1.16.6
 	github.com/tmc/langchaingo v0.1.14
@@ -46,7 +48,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/goph/emperror v0.17.2 // indirect
-	github.com/hibiken/asynq v0.25.1 // indirect
 	github.com/huandu/xstrings v1.3.3 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -65,7 +66,6 @@ require (
 	github.com/nikolalohinski/gonja v1.5.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pkoukk/tiktoken-go v0.1.6 // indirect
-	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect

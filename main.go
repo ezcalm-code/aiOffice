@@ -63,5 +63,16 @@ func main() {
 		srv.Run()
 	}()
 
+	// 运行 Asynq 监控面板（如果启用）
+	if svcContext.AsynqMonitor.IsEnabled() {
+		sw.Add(1)
+		go func() {
+			defer sw.Done()
+			if err := svcContext.AsynqMonitor.Run(); err != nil {
+				panic(err)
+			}
+		}()
+	}
+
 	sw.Wait()
 }
