@@ -16,6 +16,12 @@ type Config struct {
 		DB       int
 	}
 
+	Asynq struct {
+		Enabled     bool `yaml:"Enabled"`     // 是否启用
+		Concurrency int  `yaml:"Concurrency"` // Worker 并发数
+		RetryMax    int  `yaml:"RetryMax"`    // 最大重试次数
+	}
+
 	Mongo struct {
 		User     string
 		Password string

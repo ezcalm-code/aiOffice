@@ -4,6 +4,7 @@ import (
 	"aiOffice/internal/config"
 	"aiOffice/internal/middleware"
 	"aiOffice/internal/model"
+	"aiOffice/pkg/asynqx"
 	"aiOffice/pkg/encrypt"
 	"aiOffice/pkg/langchain/callbackx"
 	"aiOffice/pkg/mongoutils"
@@ -31,6 +32,11 @@ type ServiceContext struct {
 	Jwt                 *middleware.Jwt
 	LLM                 *openai.LLM
 	Cb                  callbacks.Handler
+
+	// Asynq 异步任务
+	AsynqClient    *asynqx.Client
+	AsynqServer    *asynqx.Server
+	AsynqScheduler *asynqx.Scheduler
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -79,6 +85,27 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		Jwt:                 middleware.NewJwt(c.Jwt.Secret),
 		LLM:                 llm,
 		Cb:                  callbacks,
+
+		// 初始化 Asynq
+		AsynqClient: asynqx.NewClient(
+			c.Redis.Addr,
+			c.Redis.Password,
+			c.Redis.DB,
+			c.Asynq.Enabled,
+		),
+		AsynqServer: asynqx.NewServer(
+			c.Redis.Addr,
+			c.Redis.Password,
+			c.Redis.DB,
+			c.Asynq.Concurrency,
+			c.Asynq.Enabled,
+		),
+		AsynqScheduler: asynqx.NewScheduler(
+			c.Redis.Addr,
+			c.Redis.Password,
+			c.Redis.DB,
+			c.Asynq.Enabled,
+		),
 	}
 
 	return svc, initAdminUser(svc)
