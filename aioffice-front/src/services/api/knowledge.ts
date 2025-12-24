@@ -67,11 +67,13 @@ export async function queryKnowledge(query: string): Promise<ApiResponse<AIChatR
  * Requirements: 7.2 - WHEN an admin uploads a document to Knowledge_Base
  * 
  * @param file - The file to upload
+ * @param toKnowledge - Whether to add to knowledge base (default: true)
  * @param onProgress - Optional progress callback
  * @returns Promise with upload response
  */
 export async function uploadKnowledgeFile(
   file: File,
+  toKnowledge: boolean = true,
   onProgress?: (progress: number) => void
 ): Promise<ApiResponse<KnowledgeUploadResponse>> {
   // Validate file type before upload
@@ -86,7 +88,9 @@ export async function uploadKnowledgeFile(
   const formData = new FormData();
   formData.append('file', file);
 
-  return upload<KnowledgeUploadResponse>('/api/upload/file', formData, onProgress);
+  // 添加 knowledge 参数，入知识库
+  const url = toKnowledge ? '/api/upload/file?knowledge=1' : '/api/upload/file';
+  return upload<KnowledgeUploadResponse>(url, formData, onProgress);
 }
 
 /**

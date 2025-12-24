@@ -41,8 +41,9 @@ func NewTodoTool(svc *svc.ServiceContext) *TodoTool {
 			},
 			{
 				Name:        "executeIds",
-				Description: "list of user IDs for the todo executors, data type is []string",
+				Description: "list of user IDs for the todo executors, data type is []string. If user does not specify executors, use current user's ID as the default executor.",
 				Type:        "[]string",
+				Require:     true,
 			},
 		}),
 	}
@@ -58,6 +59,7 @@ func (t *TodoTool) Description() string {
 	return `a todo add interface.
 use when you need to create a todo.
 keep Chinese output.
+IMPORTANT: executeIds is required. If user does not specify who should execute the todo, use the current user's ID (provided in context) as the default executor.
 ` + t.outputparser.GetFormatInstructions()
 }
 
@@ -82,6 +84,10 @@ func (t *TodoTool) Call(ctx context.Context, input string) (string, error) {
 		user, err := t.svc.UserModel.FindOne(ctx, uid)
 		if err == nil {
 			dataMap["creatorName"] = user.Name
+		}
+		// 如果AI没有传executeIds，默认使用当前用户
+		if dataMap["executeIds"] == nil {
+			dataMap["executeIds"] = []string{uid}
 		}
 	}
 

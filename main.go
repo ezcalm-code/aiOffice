@@ -2,12 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"sync"
 
 	"aiOffice/internal/config"
 	"aiOffice/internal/handler/start"
 	"aiOffice/internal/handler/ws"
 	"aiOffice/internal/svc"
+	"aiOffice/pkg/asynqx/handlers"
 	"aiOffice/pkg/conf"
 )
 
@@ -62,6 +64,56 @@ func main() {
 		srv := ws.NewWs(svcContext)
 		srv.Run()
 	}()
+
+	// 运行 Asynq 监控面板（如果启用）
+	if svcContext.AsynqMonitor.IsEnabled() {
+		sw.Add(1)
+		go func() {
+			defer sw.Done()
+			if err := svcContext.AsynqMonitor.Run(); err != nil {
+				panic(err)
+			}
+		}()
+	}
+
+	// 运行 Asynq Worker（如果启用）
+	if svcContext.AsynqServer.IsEnabled() {
+		// 注册任务处理器
+		h := handlers.NewHandlers(svcContext)
+		h.Register(svcContext.AsynqServer)
+
+		sw.Add(1)
+		go func() {
+			defer sw.Done()
+			fmt.Println("[Asynq] Worker starting...")
+			if err := svcContext.AsynqServer.Run(); err != nil {
+				fmt.Printf("[Asynq] Worker error: %v\n", err)
+			}
+		}()
+	}
+
+	// 运行 Asynq Scheduler（如果启用）
+	if svcContext.AsynqScheduler.IsEnabled() {
+		// 注册定时任务
+		if _, err := svcContext.AsynqScheduler.RegisterTodoReminder(); err != nil {
+			fmt.Printf("[Scheduler] 注册待办提醒失败: %v\n", err)
+		}
+		if _, err := svcContext.AsynqScheduler.RegisterApprovalReminder(); err != nil {
+			fmt.Printf("[Scheduler] 注册审批提醒失败: %v\n", err)
+		}
+		if _, err := svcContext.AsynqScheduler.RegisterDailySummary(); err != nil {
+			fmt.Printf("[Scheduler] 注册每日总结失败: %v\n", err)
+		}
+
+		sw.Add(1)
+		go func() {
+			defer sw.Done()
+			fmt.Println("[Scheduler] Scheduler starting...")
+			if err := svcContext.AsynqScheduler.Run(); err != nil {
+				fmt.Printf("[Scheduler] Scheduler error: %v\n", err)
+			}
+		}()
+	}
 
 	sw.Wait()
 }

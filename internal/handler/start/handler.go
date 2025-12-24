@@ -6,6 +6,7 @@ import (
 	"aiOffice/internal/handler"
 	"aiOffice/internal/svc"
 	"aiOffice/pkg/httpx"
+	"aiOffice/pkg/metrics"
 )
 
 type Handler interface {
@@ -27,6 +28,10 @@ func NewHandle(svc *svc.ServiceContext) *handle {
 	}
 
 	httpx.SetErrorHandler(handler.ErrorHandler)
+
+	// 注册 Prometheus 指标中间件和端点
+	h.srv.Use(metrics.MetricsMiddleware())
+	h.srv.GET("/metrics", metrics.PrometheusHandler())
 
 	handlers := initHandler(svc)
 	for _, handler := range handlers {

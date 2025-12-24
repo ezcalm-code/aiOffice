@@ -20,6 +20,13 @@ Redis:
   Password: ""
   DB: 0
 
+#Asynq异步任务配置
+Asynq:
+  Enabled: false           # 是否启用（默认关闭）
+  Concurrency: 10          # Worker 并发数
+  RetryMax: 3              # 最大重试次数
+  MonitorAddr: "0.0.0.0:8002"  # 监控面板地址
+
 Jwt:
   Secret: "jwtnb666"
   Expire: 8640000 #100天

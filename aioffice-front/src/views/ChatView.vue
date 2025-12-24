@@ -20,6 +20,7 @@ const userStore = useUserStore();
 // Local state
 const uploadProgress = ref(0);
 const isUploading = ref(false);
+const pendingFile = ref<File | null>(null);
 
 // Computed properties
 const connectionStatus = computed(() => chatStore.connectionStatus);
@@ -106,40 +107,72 @@ async function handleSendMessage(content: string): Promise<void> {
 }
 
 /**
- * Handle file upload to knowledge base
- * Requirements: 2.3 - WHEN a user uploads a file in AI_Chat THEN upload and display progress
- * Requirements: 7.2 - WHEN an admin uploads a document to Knowledge_Base THEN support .md, .pdf, .docx, .txt formats
+ * Handle file selection - store file for later upload
  */
-async function handleFileUpload(file: File): Promise<void> {
-  if (isUploading.value) return;
-
-  // Validate file type using knowledge base validation
-  // Requirements: 7.2 - Support .md, .pdf, .docx, .txt formats
+function handleFileSelect(file: File): void {
+  // Validate file type
   if (!validateKnowledgeFileType(file.name)) {
     chatStore.addAIResponse(`不支持的文件类型。请上传以下格式的文件：${ALLOWED_FILE_EXTENSIONS.join(', ')}`);
     return;
   }
+  pendingFile.value = file;
+}
 
+/**
+ * Cancel pending file
+ */
+function cancelPendingFile(): void {
+  pendingFile.value = null;
+}
+
+/**
+ * Handle file upload to knowledge base
+ * Requirements: 2.3 - WHEN a user uploads a file in AI_Chat THEN upload and display progress
+ * Requirements: 7.2 - WHEN an admin uploads a document to Knowledge_Base THEN support .md, .pdf, .docx, .txt formats
+ */
+async function uploadPendingFile(): Promise<void> {
+  if (isUploading.value || !pendingFile.value) return;
+
+  const file = pendingFile.value;
+  const isKnowledgeMode = chatMode.value === 'knowledge';
+  
   isUploading.value = true;
   uploadProgress.value = 0;
+  pendingFile.value = null;
 
-  // Add user message about upload
-  chatStore.sendAIMessage(`正在上传文件到知识库: ${file.name}`);
+  // Add user message about upload to current mode only
+  if (isKnowledgeMode) {
+    chatStore.sendKnowledgeMessage(`正在上传文件到知识库: ${file.name}`);
+  } else {
+    chatStore.sendAIMessage(`正在上传文件: ${file.name}`);
+  }
 
   try {
-    // Use knowledge base upload service
-    const response = await uploadKnowledgeFile(file, (progress) => {
+    // Use knowledge base upload service, only add to knowledge when in knowledge mode
+    const response = await uploadKnowledgeFile(file, isKnowledgeMode, (progress) => {
       uploadProgress.value = progress;
     });
 
-    if (response.code === 0 && response.data) {
-      chatStore.addAIResponse(`文件 "${file.name}" 已成功上传到知识库！您现在可以通过输入 "/kb 您的问题" 或切换到知识库模式来查询相关内容。`);
+    if (response.code === 200 && response.data) {
+      if (isKnowledgeMode) {
+        chatStore.addKnowledgeResponse(`文件 "${file.name}" 已成功上传到知识库！您现在可以查询相关内容。`);
+      } else {
+        chatStore.addAIResponse(`文件 "${file.name}" 上传成功！`);
+      }
     } else {
-      chatStore.addAIResponse(`文件上传失败: ${response.msg || '未知错误'}`);
+      if (isKnowledgeMode) {
+        chatStore.addKnowledgeResponse(`文件上传失败: ${response.msg || '未知错误'}`);
+      } else {
+        chatStore.addAIResponse(`文件上传失败: ${response.msg || '未知错误'}`);
+      }
     }
   } catch (error) {
     console.error('File upload error:', error);
-    chatStore.addAIResponse('文件上传失败，请稍后重试。');
+    if (isKnowledgeMode) {
+      chatStore.addKnowledgeResponse('文件上传失败，请稍后重试。');
+    } else {
+      chatStore.addAIResponse('文件上传失败，请稍后重试。');
+    }
   } finally {
     isUploading.value = false;
     uploadProgress.value = 0;
@@ -192,8 +225,11 @@ onUnmounted(() => {
         :loading="isLoading"
         type="ai"
         :title="chatMode === 'knowledge' ? '知识库查询' : 'AI 智能助手'"
+        :pending-file="pendingFile"
         @send="handleSendMessage"
-        @upload="handleFileUpload"
+        @upload="handleFileSelect"
+        @cancel-file="cancelPendingFile"
+        @confirm-upload="uploadPendingFile"
       />
     </div>
 

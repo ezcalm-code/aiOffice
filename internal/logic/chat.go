@@ -46,10 +46,10 @@ func NewChat(svc *svc.ServiceContext) Chat {
 		chatinternal.NewKnowledgeHandler(svc),
 	}
 
-	// 2.创建memory
+	// 2.创建memory（LRU淘汰，最多保留200个会话）
 	m := memoryx.NewMemoryx(func() schema.Memory {
 		return memory.NewConversationBuffer()
-	})
+	}, memoryx.WithMaxSize(200))
 
 	// 3.创建router
 	r := router.NewRouter(svc.LLM, handlers, m)
